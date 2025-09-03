@@ -1,0 +1,61 @@
+CREATE TABLE User (
+    id TEXT NOT NULL PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    userType TEXT NOT NULL,
+    createdAt INTEGER NOT NULL,
+    data TEXT NOT NULL
+);
+
+CREATE TABLE Chat (
+    id TEXT NOT NULL PRIMARY KEY,
+    carerId TEXT NOT NULL,
+    careeId TEXT NOT NULL,
+    createdAt INTEGER NOT NULL,
+    lastActivity INTEGER NOT NULL
+);
+
+CREATE TABLE Message (
+    id TEXT NOT NULL PRIMARY KEY,
+    chatId TEXT NOT NULL,
+    senderId TEXT NOT NULL,
+    content TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    status TEXT NOT NULL,
+    messageType TEXT NOT NULL DEFAULT 'TEXT',
+    FOREIGN KEY (chatId) REFERENCES Chat(id)
+);
+
+CREATE TABLE Invitation (
+    token TEXT NOT NULL PRIMARY KEY,
+    carerId TEXT NOT NULL,
+    expirationTime INTEGER NOT NULL,
+    isUsed INTEGER NOT NULL DEFAULT 0
+);
+
+-- Queries
+selectAllUsers:
+SELECT * FROM User;
+
+selectUserById:
+SELECT * FROM User WHERE id = ?;
+
+insertUser:
+INSERT INTO User(id, email, userType, createdAt, data)
+VALUES (?, ?, ?, ?, ?);
+
+selectChatsByCarerId:
+SELECT * FROM Chat WHERE carerId = ?;
+
+selectMessagesByChatId:
+SELECT * FROM Message WHERE chatId = ? ORDER BY timestamp ASC;
+
+insertMessage:
+INSERT INTO Message(id, chatId, senderId, content, timestamp, status, messageType)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+insertInvitation:
+INSERT INTO Invitation(token, carerId, expirationTime, isUsed)
+VALUES (?, ?, ?, ?);
+
+selectInvitationByToken:
+SELECT * FROM Invitation WHERE token = ? AND isUsed = 0 AND expirationTime > ?;
