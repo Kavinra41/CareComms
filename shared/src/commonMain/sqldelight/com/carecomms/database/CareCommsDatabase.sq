@@ -1,61 +1,202 @@
+-- User table for storing both carers and carees
 CREATE TABLE User (
     id TEXT NOT NULL PRIMARY KEY,
     email TEXT NOT NULL UNIQUE,
-    userType TEXT NOT NULL,
+    userType TEXT NOT NULL, -- 'CARER' or 'CAREE'
     createdAt INTEGER NOT NULL,
-    data TEXT NOT NULL
+    data TEXT NOT NULL -- JSON serialized user-specific data
 );
 
+-- Chat table for carer-caree conversations
 CREATE TABLE Chat (
     id TEXT NOT NULL PRIMARY KEY,
     carerId TEXT NOT NULL,
     careeId TEXT NOT NULL,
     createdAt INTEGER NOT NULL,
-    lastActivity INTEGER NOT NULL
+    lastActivity INTEGER NOT NULL,
+    FOREIGN KEY (carerId) REFERENCES User(id),
+    FOREIGN KEY (careeId) REFERENCES User(id)
 );
 
+-- Message table for chat messages
 CREATE TABLE Message (
     id TEXT NOT NULL PRIMARY KEY,
     chatId TEXT NOT NULL,
     senderId TEXT NOT NULL,
     content TEXT NOT NULL,
     timestamp INTEGER NOT NULL,
-    status TEXT NOT NULL,
-    messageType TEXT NOT NULL DEFAULT 'TEXT',
-    FOREIGN KEY (chatId) REFERENCES Chat(id)
+    status TEXT NOT NULL, -- 'SENT', 'DELIVERED', 'READ'
+    messageType TEXT NOT NULL DEFAULT 'TEXT', -- 'TEXT', 'IMAGE', 'SYSTEM'
+    FOREIGN KEY (chatId) REFERENCES Chat(id),
+    FOREIGN KEY (senderId) REFERENCES User(id)
 );
 
+-- Invitation table for caree invitations
 CREATE TABLE Invitation (
     token TEXT NOT NULL PRIMARY KEY,
     carerId TEXT NOT NULL,
     expirationTime INTEGER NOT NULL,
-    isUsed INTEGER NOT NULL DEFAULT 0
+    isUsed INTEGER NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL,
+    FOREIGN KEY (carerId) REFERENCES User(id)
 );
 
--- Queries
+-- Cache table for storing temporary data and offline support
+CREATE TABLE Cache (
+    key TEXT NOT NULL PRIMARY KEY,
+    value TEXT NOT NULL,
+    expirationTime INTEGER,
+    createdAt INTEGER NOT NULL
+);
+
+-- Typing status table for real-time typing indicators
+CREATE TABLE TypingStatus (
+    chatId TEXT NOT NULL,
+    userId TEXT NOT NULL,
+    isTyping INTEGER NOT NULL DEFAULT 0,
+    timestamp INTEGER NOT NULL,
+    PRIMARY KEY (chatId, userId),
+    FOREIGN KEY (chatId) REFERENCES Chat(id),
+    FOREIGN KEY (userId) REFERENCES User(id)
+);
+
+-- User queries
 selectAllUsers:
 SELECT * FROM User;
 
 selectUserById:
 SELECT * FROM User WHERE id = ?;
 
+selectUserByEmail:
+SELECT * FROM User WHERE email = ?;
+
 insertUser:
 INSERT INTO User(id, email, userType, createdAt, data)
 VALUES (?, ?, ?, ?, ?);
 
+updateUser:
+UPDATE User SET email = ?, data = ? WHERE id = ?;
+
+deleteUser:
+DELETE FROM User WHERE id = ?;
+
+selectCarers:
+SELECT * FROM User WHERE userType = 'CARER';
+
+selectCarees:
+SELECT * FROM User WHERE userType = 'CAREE';
+
+-- Chat queries
+selectAllChats:
+SELECT * FROM Chat;
+
+selectChatById:
+SELECT * FROM Chat WHERE id = ?;
+
 selectChatsByCarerId:
-SELECT * FROM Chat WHERE carerId = ?;
+SELECT * FROM Chat WHERE carerId = ? ORDER BY lastActivity DESC;
+
+selectChatsByCareeId:
+SELECT * FROM Chat WHERE careeId = ? ORDER BY lastActivity DESC;
+
+selectChatByParticipants:
+SELECT * FROM Chat WHERE carerId = ? AND careeId = ?;
+
+insertChat:
+INSERT INTO Chat(id, carerId, careeId, createdAt, lastActivity)
+VALUES (?, ?, ?, ?, ?);
+
+updateChatActivity:
+UPDATE Chat SET lastActivity = ? WHERE id = ?;
+
+deleteChat:
+DELETE FROM Chat WHERE id = ?;
+
+-- Message queries
+selectAllMessages:
+SELECT * FROM Message;
+
+selectMessageById:
+SELECT * FROM Message WHERE id = ?;
 
 selectMessagesByChatId:
 SELECT * FROM Message WHERE chatId = ? ORDER BY timestamp ASC;
+
+selectMessagesByChatIdPaginated:
+SELECT * FROM Message WHERE chatId = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?;
+
+selectLastMessageByChatId:
+SELECT * FROM Message WHERE chatId = ? ORDER BY timestamp DESC LIMIT 1;
+
+selectUnreadMessageCount:
+SELECT COUNT(*) FROM Message WHERE chatId = ? AND senderId != ? AND status != 'READ';
 
 insertMessage:
 INSERT INTO Message(id, chatId, senderId, content, timestamp, status, messageType)
 VALUES (?, ?, ?, ?, ?, ?, ?);
 
-insertInvitation:
-INSERT INTO Invitation(token, carerId, expirationTime, isUsed)
-VALUES (?, ?, ?, ?);
+updateMessageStatus:
+UPDATE Message SET status = ? WHERE id = ?;
+
+updateAllMessagesStatusInChat:
+UPDATE Message SET status = ? WHERE chatId = ? AND senderId != ? AND status != 'READ';
+
+deleteMessage:
+DELETE FROM Message WHERE id = ?;
+
+deleteMessagesByChatId:
+DELETE FROM Message WHERE chatId = ?;
+
+-- Invitation queries
+selectAllInvitations:
+SELECT * FROM Invitation;
 
 selectInvitationByToken:
 SELECT * FROM Invitation WHERE token = ? AND isUsed = 0 AND expirationTime > ?;
+
+selectInvitationsByCarerId:
+SELECT * FROM Invitation WHERE carerId = ? ORDER BY createdAt DESC;
+
+insertInvitation:
+INSERT INTO Invitation(token, carerId, expirationTime, isUsed, createdAt)
+VALUES (?, ?, ?, ?, ?);
+
+markInvitationAsUsed:
+UPDATE Invitation SET isUsed = 1 WHERE token = ?;
+
+deleteExpiredInvitations:
+DELETE FROM Invitation WHERE expirationTime < ?;
+
+-- Cache queries
+selectCacheByKey:
+SELECT * FROM Cache WHERE key = ? AND (expirationTime IS NULL OR expirationTime > ?);
+
+insertCache:
+INSERT OR REPLACE INTO Cache(key, value, expirationTime, createdAt)
+VALUES (?, ?, ?, ?);
+
+deleteCache:
+DELETE FROM Cache WHERE key = ?;
+
+deleteExpiredCache:
+DELETE FROM Cache WHERE expirationTime IS NOT NULL AND expirationTime < ?;
+
+clearAllCache:
+DELETE FROM Cache;
+
+-- Typing status queries
+selectTypingStatus:
+SELECT * FROM TypingStatus WHERE chatId = ? AND userId = ?;
+
+selectTypingStatusByChatId:
+SELECT * FROM TypingStatus WHERE chatId = ? AND isTyping = 1;
+
+insertOrUpdateTypingStatus:
+INSERT OR REPLACE INTO TypingStatus(chatId, userId, isTyping, timestamp)
+VALUES (?, ?, ?, ?);
+
+deleteTypingStatus:
+DELETE FROM TypingStatus WHERE chatId = ? AND userId = ?;
+
+clearOldTypingStatus:
+DELETE FROM TypingStatus WHERE timestamp < ?;

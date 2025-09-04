@@ -10,6 +10,10 @@ interface ChatRepository {
     suspend fun getMessages(chatId: String): Flow<List<Message>>
     suspend fun sendMessage(chatId: String, message: Message): Result<Unit>
     suspend fun markAsRead(chatId: String, messageId: String): Result<Unit>
+    suspend fun markAllAsRead(chatId: String): Result<Unit>
     suspend fun getTypingStatus(chatId: String): Flow<TypingStatus>
     suspend fun setTypingStatus(chatId: String, isTyping: Boolean): Result<Unit>
+    suspend fun createChat(carerId: String, careeId: String): Result<String>
+    suspend fun getChatId(carerId: String, careeId: String): String?
+    suspend fun searchChats(carerId: String, query: String): Flow<List<ChatPreview>>
 }

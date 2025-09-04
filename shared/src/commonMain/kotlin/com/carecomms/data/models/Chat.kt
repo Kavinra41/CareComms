@@ -13,10 +13,27 @@ data class Message(
 )
 
 @Serializable
-enum class MessageStatus { SENT, DELIVERED, READ }
+enum class MessageStatus {
+    SENT,
+    DELIVERED,
+    READ
+}
 
 @Serializable
-enum class MessageType { TEXT, IMAGE, FILE }
+enum class MessageType {
+    TEXT,
+    IMAGE,
+    SYSTEM
+}
+
+@Serializable
+data class Chat(
+    val id: String,
+    val carerId: String,
+    val careeId: String,
+    val createdAt: Long,
+    val lastActivity: Long
+)
 
 @Serializable
 data class ChatPreview(
@@ -26,15 +43,6 @@ data class ChatPreview(
     val lastMessageTime: Long,
     val unreadCount: Int,
     val isOnline: Boolean
-)
-
-@Serializable
-data class Chat(
-    val id: String,
-    val carerId: String,
-    val careeId: String,
-    val createdAt: Long,
-    val lastActivity: Long
 )
 
 @Serializable

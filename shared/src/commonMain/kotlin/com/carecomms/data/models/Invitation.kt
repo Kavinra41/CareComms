@@ -6,23 +6,15 @@ import kotlinx.serialization.Serializable
 data class InvitationData(
     val carerId: String,
     val carerName: String,
-    val expirationTime: Long
+    val expirationTime: Long,
+    val token: String,
+    val isUsed: Boolean = false
 )
 
 @Serializable
-data class CarerRegistrationData(
-    val email: String,
-    val password: String,
-    val documents: List<String>,
-    val age: Int,
+data class CarerInfo(
+    val id: String,
+    val name: String,
     val phoneNumber: String,
     val location: String
-)
-
-@Serializable
-data class CareeRegistrationData(
-    val email: String,
-    val password: String,
-    val healthInfo: String,
-    val basicDetails: PersonalDetails
 )

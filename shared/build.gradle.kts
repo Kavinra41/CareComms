@@ -50,11 +50,19 @@ kotlin {
         
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation("app.cash.sqldelight:sqlite-driver:2.0.1")
         }
         
         androidMain.dependencies {
             implementation(libs.ktor.client.android)
             implementation(libs.sqldelight.android.driver)
+            
+            // Firebase
+            implementation(platform(libs.firebase.bom))
+            implementation(libs.firebase.auth)
+            
+            // Security
+            implementation("androidx.security:security-crypto:1.1.0-alpha06")
         }
         
         iosMain.dependencies {

@@ -21,17 +21,19 @@ data class DailyMetric(
 @Serializable
 data class WeeklyMetric(
     val weekStart: String,
-    val averageActivity: Double,
+    val weekEnd: String,
+    val averageActivityLevel: Double,
     val totalCommunications: Int,
-    val summary: String
+    val trends: List<String>
 )
 
 @Serializable
 data class BiweeklyMetric(
     val periodStart: String,
     val periodEnd: String,
-    val trends: List<String>,
-    val insights: String
+    val overallTrend: String,
+    val keyInsights: List<String>,
+    val recommendations: List<String>
 )
 
 @Serializable
@@ -39,20 +41,39 @@ data class AnalyticsNote(
     val id: String,
     val content: String,
     val timestamp: Long,
-    val category: String
+    val category: String,
+    val priority: NotePriority = NotePriority.NORMAL
 )
 
 @Serializable
-enum class AnalyticsPeriod { DAILY, WEEKLY, BIWEEKLY }
+enum class NotePriority {
+    LOW,
+    NORMAL,
+    HIGH,
+    URGENT
+}
+
+@Serializable
+enum class AnalyticsPeriod {
+    DAILY,
+    WEEKLY,
+    BIWEEKLY,
+    MONTHLY
+}
 
 @Serializable
 data class DetailsTreeNode(
     val id: String,
     val title: String,
     val type: NodeType,
-    val children: List<DetailsTreeNode>,
-    val data: String?
+    val children: List<DetailsTreeNode> = emptyList(),
+    val data: String? = null
 )
 
 @Serializable
-enum class NodeType { CAREE, CATEGORY, DETAIL, ITEM }
+enum class NodeType {
+    CAREE,
+    CATEGORY,
+    DETAIL,
+    ITEM
+}

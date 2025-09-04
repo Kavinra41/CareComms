@@ -18,7 +18,7 @@ data class Carer(
     val age: Int,
     val phoneNumber: String,
     val location: String,
-    val careeIds: List<String>
+    val careeIds: List<String> = emptyList()
 ) : User()
 
 @Serializable
@@ -36,5 +36,24 @@ data class PersonalDetails(
     val firstName: String,
     val lastName: String,
     val dateOfBirth: String,
-    val address: String
+    val address: String? = null,
+    val emergencyContact: String? = null
+)
+
+@Serializable
+data class CarerRegistrationData(
+    val email: String,
+    val password: String,
+    val documents: List<String>,
+    val age: Int,
+    val phoneNumber: String,
+    val location: String
+)
+
+@Serializable
+data class CareeRegistrationData(
+    val email: String,
+    val password: String,
+    val healthInfo: String,
+    val basicDetails: PersonalDetails
 )
