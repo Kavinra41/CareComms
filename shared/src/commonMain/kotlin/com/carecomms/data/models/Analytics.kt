@@ -22,18 +22,19 @@ data class DailyMetric(
 data class WeeklyMetric(
     val weekStart: String,
     val weekEnd: String,
-    val averageActivityLevel: Double,
+    val averageActivityLevel: Int,
     val totalCommunications: Int,
-    val trends: List<String>
+    val notes: String
 )
 
 @Serializable
 data class BiweeklyMetric(
     val periodStart: String,
     val periodEnd: String,
-    val overallTrend: String,
-    val keyInsights: List<String>,
-    val recommendations: List<String>
+    val averageActivityLevel: Int,
+    val totalCommunications: Int,
+    val trends: List<String>,
+    val notes: String
 )
 
 @Serializable
@@ -41,8 +42,7 @@ data class AnalyticsNote(
     val id: String,
     val content: String,
     val timestamp: Long,
-    val category: String,
-    val priority: NotePriority = NotePriority.NORMAL
+    val type: String
 )
 
 @Serializable
@@ -67,7 +67,8 @@ data class DetailsTreeNode(
     val title: String,
     val type: NodeType,
     val children: List<DetailsTreeNode> = emptyList(),
-    val data: String? = null
+    val data: Any? = null,
+    val isExpanded: Boolean = false
 )
 
 @Serializable

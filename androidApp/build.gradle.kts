@@ -22,8 +22,12 @@ kotlin {
             implementation(libs.compose.ui.tooling.preview)
             implementation(libs.compose.material)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.navigation.compose)
             implementation(libs.koin.android)
             implementation(libs.koin.androidx.compose)
+            
+            // UI Components
+            implementation(libs.accompanist.swiperefresh)
             
             // Firebase
             implementation(platform(libs.firebase.bom))
@@ -31,6 +35,17 @@ kotlin {
             implementation(libs.firebase.database)
             implementation(libs.firebase.messaging)
         }
+    }
+}
+
+dependencies {
+    // Test dependencies
+    androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
+    debugImplementation(libs.compose.ui.tooling)
+    debugImplementation(libs.compose.ui.test.manifest)
     }
 }
 

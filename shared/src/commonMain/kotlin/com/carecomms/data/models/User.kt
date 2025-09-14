@@ -35,9 +35,26 @@ data class Caree(
 data class PersonalDetails(
     val firstName: String,
     val lastName: String,
-    val dateOfBirth: String,
+    val age: Int,
+    val dateOfBirth: String? = null,
     val address: String? = null,
     val emergencyContact: String? = null
+)
+
+@Serializable
+data class CareeInfo(
+    val id: String,
+    val name: String,
+    val age: Int,
+    val healthConditions: List<String>
+)
+
+@Serializable
+data class CarerInfo(
+    val id: String,
+    val name: String,
+    val location: String,
+    val phoneNumber: String
 )
 
 @Serializable
@@ -56,4 +73,10 @@ data class CareeRegistrationData(
     val password: String,
     val healthInfo: String,
     val basicDetails: PersonalDetails
+)
+
+@Serializable
+data class AuthResult(
+    val user: User,
+    val token: String
 )

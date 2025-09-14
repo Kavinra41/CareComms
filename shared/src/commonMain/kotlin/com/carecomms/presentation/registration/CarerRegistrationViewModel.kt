@@ -8,6 +8,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
 class CarerRegistrationViewModel(
@@ -19,8 +22,8 @@ class CarerRegistrationViewModel(
     private val _state = MutableStateFlow(CarerRegistrationState())
     val state: StateFlow<CarerRegistrationState> = _state.asStateFlow()
     
-    private val _effects = MutableStateFlow<CarerRegistrationEffect?>(null)
-    val effects: StateFlow<CarerRegistrationEffect?> = _effects.asStateFlow()
+    private val _effects = MutableSharedFlow<CarerRegistrationEffect>()
+    val effects: SharedFlow<CarerRegistrationEffect> = _effects.asSharedFlow()
     
     fun handleAction(action: CarerRegistrationAction) {
         when (action) {
@@ -81,11 +84,9 @@ class CarerRegistrationViewModel(
                     validationErrors = emptyMap(),
                     registrationError = null
                 )
-                _effects.value = null
             }
             is CarerRegistrationAction.ResetState -> {
                 _state.value = CarerRegistrationState()
-                _effects.value = null
             }
         }
     }
@@ -123,16 +124,16 @@ class CarerRegistrationViewModel(
                             isRegistrationSuccessful = true,
                             authResult = authResult
                         )
-                        _effects.value = CarerRegistrationEffect.NavigateToChatList
+                        _effects.emit(CarerRegistrationEffect.NavigateToChatList)
                     },
                     onFailure = { error ->
                         _state.value = currentState.copy(
                             isLoading = false,
                             registrationError = error.message ?: "Registration failed"
                         )
-                        _effects.value = CarerRegistrationEffect.ShowError(
+                        _effects.emit(CarerRegistrationEffect.ShowError(
                             error.message ?: "Registration failed"
-                        )
+                        ))
                     }
                 )
             } catch (e: Exception) {
@@ -140,9 +141,9 @@ class CarerRegistrationViewModel(
                     isLoading = false,
                     registrationError = e.message ?: "An unexpected error occurred"
                 )
-                _effects.value = CarerRegistrationEffect.ShowError(
+                _effects.emit(CarerRegistrationEffect.ShowError(
                     e.message ?: "An unexpected error occurred"
-                )
+                ))
             }
         }
     }
@@ -199,18 +200,18 @@ class CarerRegistrationViewModel(
                 result.fold(
                     onSuccess = { document ->
                         handleAction(CarerRegistrationAction.AddDocument(document))
-                        _effects.value = CarerRegistrationEffect.ShowSuccess("Document uploaded successfully")
+                        _effects.emit(CarerRegistrationEffect.ShowSuccess("Document uploaded successfully"))
                     },
                     onFailure = { error ->
-                        _effects.value = CarerRegistrationEffect.ShowError(
+                        _effects.emit(CarerRegistrationEffect.ShowError(
                             error.message ?: "Failed to upload document"
-                        )
+                        ))
                     }
                 )
             } catch (e: Exception) {
-                _effects.value = CarerRegistrationEffect.ShowError(
+                _effects.emit(CarerRegistrationEffect.ShowError(
                     e.message ?: "Failed to upload document"
-                )
+                ))
             }
         }
     }

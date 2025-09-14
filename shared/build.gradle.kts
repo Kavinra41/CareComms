@@ -60,6 +60,8 @@ kotlin {
             // Firebase
             implementation(platform(libs.firebase.bom))
             implementation(libs.firebase.auth)
+            implementation(libs.firebase.database)
+            implementation(libs.firebase.messaging)
             
             // Security
             implementation("androidx.security:security-crypto:1.1.0-alpha06")
