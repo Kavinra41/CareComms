@@ -4,8 +4,8 @@ import com.carecomms.data.models.*
 import com.carecomms.domain.repository.ChatRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
+import com.benasher44.uuid.Uuid
+import com.benasher44.uuid.uuid4
 
 /**
  * iOS implementation of Firebase Chat Repository

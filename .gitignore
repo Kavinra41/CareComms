@@ -1,0 +1,183 @@
+# Kotlin Multiplatform Mobile - CareComms
+# Comprehensive .gitignore to reduce commit size
+
+# ===== BUILD OUTPUTS =====
+build/
+*/build/
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# ===== IDE FILES =====
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.swo
+*~
+
+# ===== ANDROID SPECIFIC =====
+# Android build outputs
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+
+# Android Studio
+captures/
+.externalNativeBuild/
+.cxx/
+local.properties
+*.hprof
+
+# Keystore files
+*.jks
+*.keystore
+
+# Google Services (Firebase)
+google-services.json
+GoogleService-Info.plist
+
+# ===== IOS SPECIFIC =====
+# Xcode
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+*.xcworkspace/*
+!*.xcworkspace/contents.xcworkspacedata
+!*.xcworkspace/xcshareddata/
+
+# iOS build outputs
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# CocoaPods
+Pods/
+*.podspec
+Podfile.lock
+
+# Carthage
+Carthage/Build/
+
+# Swift Package Manager
+.build/
+Package.resolved
+
+# ===== DOCUMENTATION & VERIFICATION FILES =====
+# Implementation documentation (can be regenerated)
+*_IMPLEMENTATION*.md
+*_VERIFICATION*.md
+*_implementation_*.md
+*_verification_*.md
+ANDROID_*.md
+IOS_*.md
+ios_*.md
+android_*.md
+
+# Deployment and final verification docs
+FINAL_*.md
+DEPLOYMENT_*.md
+PERFORMANCE_*.md
+SECURITY_*.md
+ERROR_HANDLING_*.md
+ACCESSIBILITY_*.md
+PUSH_NOTIFICATIONS_*.md
+REALTIME_*.md
+DATABASE_*.md
+FIREBASE_*.md
+CAREE_*.md
+CARER_*.md
+
+# ===== TEST FILES =====
+# All test directories and files (can be regenerated)
+*/src/test/
+*/src/androidTest/
+*/src/iosTest/
+*/src/commonTest/
+*Test.kt
+*Test.swift
+*Tests.swift
+*UITests.swift
+*IntegrationTest.kt
+*UnitTest.kt
+
+# Test reports and coverage
+test-results/
+coverage/
+*.lcov
+*.gcov
+
+# ===== APP STORE ASSETS =====
+# App store assets (usually managed separately)
+app-store-assets/
+screenshots/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+!**/src/main/res/**/*.png
+!**/src/main/res/**/*.jpg
+!**/src/main/res/**/*.jpeg
+
+# ===== LOGS & TEMPORARY FILES =====
+*.log
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# ===== KOTLIN/GRADLE SPECIFIC =====
+.kotlin/
+kotlin-js-store/
+*.kotlin_module
+*.kotlin_metadata
+
+# ===== PERFORMANCE & MONITORING =====
+# Performance monitoring files
+shared/src/*/kotlin/com/carecomms/performance/
+shared/src/*/kotlin/com/carecomms/security/
+shared/src/*/kotlin/com/carecomms/accessibility/
+
+# ===== BACKUP & TEMPORARY DIRECTORIES =====
+backup/
+temp/
+tmp/
+.tmp/
+
+# ===== KIRO IDE SPECIFIC =====
+.kiro/specs/
+.kiro/steering/
+
+# ===== VERSION CONTROL =====
+.git/
+*.orig
+*.rej
+
+# ===== ENVIRONMENT & CONFIG =====
+.env
+.env.local
+.env.*.local
+config.local.*
+
+# ===== PACKAGE MANAGERS =====
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===== MISC =====
+*.bak
+*.backup
+*.old
+*~
+.cache/

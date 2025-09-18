@@ -1,10 +1,10 @@
 package com.carecomms.android
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -12,7 +12,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.text.style.TextAlign
 import com.carecomms.android.navigation.AuthNavigation
 import com.carecomms.android.navigation.CarerNavigation

@@ -10,7 +10,7 @@ import kotlinx.datetime.Clock
 /**
  * Monitors app performance metrics and provides insights
  */
-class PerformanceMonitor(
+open class PerformanceMonitor(
     private val scope: CoroutineScope
 ) {
     private val _metrics = MutableStateFlow(PerformanceMetrics())

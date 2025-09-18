@@ -11,8 +11,8 @@ androidx-navigation-compose = "2.7.6"
 androidx-espresso-core = "3.5.1"
 androidx-material = "1.11.0"
 androidx-test-junit = "1.1.5"
-compose = "1.5.11"
-compose-plugin = "1.5.12"
+compose = "1.5.4"
+compose-plugin = "1.5.11"
 junit = "4.13.2"
 kotlin = "1.9.21"
 kotlinx-coroutines = "1.7.3"
@@ -86,7 +86,6 @@ accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiper
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
 jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 sqlDelight = { id = "app.cash.sqldelight", version.ref = "sqlDelight" }

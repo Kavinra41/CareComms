@@ -2,8 +2,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.jetbrainsCompose)
-    alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.googleServices)
+    // alias(libs.plugins.googleServices) // temporarily disabled
 }
 
 kotlin {
@@ -29,11 +28,11 @@ kotlin {
             // UI Components
             implementation(libs.accompanist.swiperefresh)
             
-            // Firebase
-            implementation(platform(libs.firebase.bom))
-            implementation(libs.firebase.auth)
-            implementation(libs.firebase.database)
-            implementation(libs.firebase.messaging)
+            // Firebase - temporarily disabled
+            // implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+            // implementation("com.google.firebase:firebase-auth")
+            // implementation("com.google.firebase:firebase-database")
+            // implementation("com.google.firebase:firebase-messaging")
         }
     }
 }
@@ -47,7 +46,7 @@ dependencies {
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
     }
-}
+
 
 android {
     namespace = "com.carecomms.android"
@@ -80,5 +79,8 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.4"
     }
 }

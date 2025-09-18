@@ -1,197 +1,157 @@
 package com.carecomms.android.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
 fun ProfileScreen(
     carerId: String,
-    onLogout: () -> Unit,
-    modifier: Modifier = Modifier
+    onLogout: () -> Unit
 ) {
-    var showLogoutDialog by remember { mutableStateOf(false) }
-    
-    Column(
-        modifier = modifier
+    LazyColumn(
+        modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Header
-        Text(
-            text = "Profile",
-            style = MaterialTheme.typography.h4,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colors.primary,
-            modifier = Modifier.padding(vertical = 24.dp)
-        )
+        item {
+            // Profile Header
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = 4.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        modifier = Modifier.size(80.dp),
+                        tint = MaterialTheme.colors.primary
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text(
+                        text = "Jane Doe", // Mock name
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    Text(
+                        text = "Professional Carer",
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+                    )
+                }
+            }
+        }
         
-        // Profile Icon
-        Card(
-            modifier = Modifier
-                .size(120.dp)
-                .padding(16.dp),
-            shape = RoundedCornerShape(60.dp),
-            backgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.1f),
-            elevation = 4.dp
-        ) {
-            Box(
-                contentAlignment = Alignment.Center
+        item {
+            Text(
+                text = "Account Settings",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colors.primary
+            )
+        }
+        
+        item {
+            ProfileMenuItem(
+                icon = Icons.Default.Settings,
+                title = "Settings",
+                subtitle = "App preferences and notifications",
+                onClick = { /* Navigate to settings */ }
+            )
+        }
+        
+        item {
+            ProfileMenuItem(
+                icon = Icons.Default.Person,
+                title = "Edit Profile",
+                subtitle = "Update your personal information",
+                onClick = { /* Navigate to edit profile */ }
+            )
+        }
+        
+        item {
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+        
+        item {
+            Button(
+                onClick = onLogout,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = MaterialTheme.colors.error
+                )
             ) {
                 Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Profile",
-                    modifier = Modifier.size(60.dp),
-                    tint = MaterialTheme.colors.primary
+                    imageVector = Icons.Default.ExitToApp,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
                 )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Sign Out", color = MaterialTheme.colors.onError)
             }
         }
-        
-        // User Info
-        Text(
-            text = "Professional Carer",
-            style = MaterialTheme.typography.h6,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colors.onSurface,
-            modifier = Modifier.padding(top = 16.dp)
-        )
-        
-        Text(
-            text = "ID: ${carerId.take(8)}...",
-            style = MaterialTheme.typography.body2,
-            color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
-            modifier = Modifier.padding(top = 4.dp)
-        )
-        
-        Spacer(modifier = Modifier.weight(1f))
-        
-        // Profile Options
-        Card(
+    }
+}
+
+@Composable
+private fun ProfileMenuItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        elevation = 2.dp
+    ) {
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            elevation = 2.dp,
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "Account Settings",
-                    style = MaterialTheme.typography.h6,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colors.primary,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-                
-                // Placeholder for future settings
-                Text(
-                    text = "• Notification preferences",
-                    style = MaterialTheme.typography.body1,
-                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
-                
-                Text(
-                    text = "• Privacy settings",
-                    style = MaterialTheme.typography.body1,
-                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
-                
-                Text(
-                    text = "• App preferences",
-                    style = MaterialTheme.typography.body1,
-                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        // Logout Button
-        Button(
-            onClick = { showLogoutDialog = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = MaterialTheme.colors.error,
-                contentColor = Color.White
-            ),
-            shape = RoundedCornerShape(12.dp)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.ExitToApp,
+                imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.padding(end = 8.dp)
+                tint = MaterialTheme.colors.primary,
+                modifier = Modifier.size(24.dp)
             )
-            Text(
-                text = "Logout",
-                style = MaterialTheme.typography.button,
-                fontWeight = FontWeight.Medium
-            )
+            
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = title,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                
+                Text(
+                    text = subtitle,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+                )
+            }
         }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-    }
-    
-    // Logout Confirmation Dialog
-    if (showLogoutDialog) {
-        AlertDialog(
-            onDismissRequest = { showLogoutDialog = false },
-            title = {
-                Text(
-                    text = "Confirm Logout",
-                    style = MaterialTheme.typography.h6,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Text(
-                    text = "Are you sure you want to logout? You will need to login again to access your account.",
-                    style = MaterialTheme.typography.body1
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showLogoutDialog = false
-                        onLogout()
-                    }
-                ) {
-                    Text(
-                        text = "Logout",
-                        color = MaterialTheme.colors.error,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showLogoutDialog = false }
-                ) {
-                    Text(
-                        text = "Cancel",
-                        color = MaterialTheme.colors.primary,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            },
-            shape = RoundedCornerShape(12.dp)
-        )
     }
 }

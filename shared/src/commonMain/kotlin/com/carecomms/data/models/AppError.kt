@@ -14,10 +14,10 @@ sealed class AppError : Exception() {
     object ValidationError : AppError()
     
     @Serializable
-    data class ServerError(val code: Int, val message: String) : AppError()
+    data class ServerError(val code: Int, override val message: String) : AppError()
     
     @Serializable
-    data class UnknownError(val message: String) : AppError()
+    data class UnknownError(override val message: String) : AppError()
     
     @Serializable
     object InvitationExpiredError : AppError()

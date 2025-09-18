@@ -34,6 +34,9 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
             
+            // UUID
+            implementation("com.benasher44:uuid:0.8.2")
+            
             // Ktor
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
@@ -57,11 +60,14 @@ kotlin {
             implementation(libs.ktor.client.android)
             implementation(libs.sqldelight.android.driver)
             
-            // Firebase
-            implementation(platform(libs.firebase.bom))
-            implementation(libs.firebase.auth)
-            implementation(libs.firebase.database)
-            implementation(libs.firebase.messaging)
+            // Koin Android
+            implementation(libs.koin.android)
+            
+            // Firebase - temporarily disabled
+            // implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+            // implementation("com.google.firebase:firebase-auth")
+            // implementation("com.google.firebase:firebase-database")
+            // implementation("com.google.firebase:firebase-messaging")
             
             // Security
             implementation("androidx.security:security-crypto:1.1.0-alpha06")

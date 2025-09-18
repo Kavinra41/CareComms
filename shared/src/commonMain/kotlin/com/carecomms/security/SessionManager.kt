@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * Manages user sessions with automatic refresh and security features
@@ -25,7 +26,7 @@ class SessionManager(
         refreshToken: String
     ): Result<Unit> {
         return try {
-            val expiryTime = Clock.System.now().plus(kotlinx.datetime.DateTimeUnit.MINUTE * sessionTimeoutMinutes)
+            val expiryTime = Clock.System.now().plus(sessionTimeoutMinutes.minutes)
             
             // Store encrypted session data
             secureStorage.store(SecureStorageKeys.USER_ID, userId)
@@ -64,7 +65,7 @@ class SessionManager(
                     _sessionState.value = SessionState.Expired
                     Result.success(SessionValidation.Expired)
                 }
-                currentTime > expiryTime.minus(kotlinx.datetime.DateTimeUnit.MINUTE * refreshThresholdMinutes) -> {
+                currentTime > expiryTime.minus(refreshThresholdMinutes.minutes) -> {
                     _sessionState.value = SessionState.Authenticated(
                         userId = userId,
                         expiryTime = expiryTime,
@@ -91,7 +92,7 @@ class SessionManager(
             val userId = secureStorage.retrieve(SecureStorageKeys.USER_ID).getOrNull()
                 ?: return Result.failure(SecurityException("No active session to refresh"))
             
-            val newExpiryTime = Clock.System.now().plus(kotlinx.datetime.DateTimeUnit.MINUTE * sessionTimeoutMinutes)
+            val newExpiryTime = Clock.System.now().plus(sessionTimeoutMinutes.minutes)
             
             secureStorage.store(SecureStorageKeys.AUTH_TOKEN, newAuthToken)
             secureStorage.store(SecureStorageKeys.REFRESH_TOKEN, newRefreshToken)

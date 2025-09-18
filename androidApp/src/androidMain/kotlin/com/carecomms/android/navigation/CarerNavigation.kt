@@ -1,83 +1,108 @@
 package com.carecomms.android.navigation
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Scaffold
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.carecomms.android.ui.screens.*
+
+sealed class CarerScreen {
+    object Dashboard : CarerScreen()
+    object ChatList : CarerScreen()
+    object Profile : CarerScreen()
+    data class Chat(val chatId: String) : CarerScreen()
+}
 
 @Composable
 fun CarerNavigation(
     carerId: String,
-    onLogout: () -> Unit,
-    modifier: Modifier = Modifier,
-    navController: NavHostController = rememberNavController()
+    onLogout: () -> Unit
 ) {
-    var selectedChatId by remember { mutableStateOf("") }
-    var selectedCareeeName by remember { mutableStateOf("") }
+    var currentScreen by remember { mutableStateOf<CarerScreen>(CarerScreen.Dashboard) }
     
     Scaffold(
-        modifier = modifier,
         bottomBar = {
-            // Only show bottom navigation for main screens, not chat detail
-            val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-            if (currentRoute != "chat_detail") {
-                CarerBottomNavigation(navController = navController)
+            if (currentScreen !is CarerScreen.Chat) {
+                CarerBottomNavigation(
+                    currentScreen = currentScreen,
+                    onScreenSelected = { screen ->
+                        currentScreen = screen
+                    }
+                )
             }
         }
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = CarerBottomNavItem.ChatList.route,
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable(CarerBottomNavItem.ChatList.route) {
-                ChatListContainer(
+    ) { paddingValues ->
+        when (currentScreen) {
+            CarerScreen.Dashboard -> {
+                DashboardScreen(
+                    carerId = carerId
+                )
+            }
+            
+            CarerScreen.ChatList -> {
+                ChatListScreen(
                     carerId = carerId,
-                    onChatClick = { chatId ->
-                        selectedChatId = chatId
-                        // In a real app, we would get the caree name from the chat data
-                        // For now, we'll use a mock name based on chatId
-                        selectedCareeeName = when (chatId) {
-                            "chat-1" -> "Alice Johnson"
-                            "chat-2" -> "Bob Smith"
-                            "chat-3" -> "Carol Davis"
-                            else -> "Care Recipient"
-                        }
-                        navController.navigate("chat_detail")
+                    onNavigateToChat = { chatId ->
+                        currentScreen = CarerScreen.Chat(chatId)
                     }
                 )
             }
             
-            composable(CarerBottomNavItem.Dashboard.route) {
-                DashboardScreen(carerId = carerId)
-            }
-            
-            composable(CarerBottomNavItem.DetailsTree.route) {
-                DetailsTreeScreen(carerId = carerId)
-            }
-            
-            composable(CarerBottomNavItem.Profile.route) {
+            CarerScreen.Profile -> {
                 ProfileScreen(
                     carerId = carerId,
                     onLogout = onLogout
                 )
             }
             
-            composable("chat_detail") {
-                ChatContainer(
-                    chatId = selectedChatId,
-                    currentUserId = carerId,
-                    otherUserName = selectedCareeeName,
-                    onBackClick = {
-                        navController.popBackStack()
+            is CarerScreen.Chat -> {
+                val chatScreen = currentScreen as CarerScreen.Chat
+                ChatScreen(
+                    chatId = chatScreen.chatId,
+                    onNavigateBack = {
+                        currentScreen = CarerScreen.ChatList
                     }
                 )
             }
         }
     }
 }
+
+@Composable
+private fun CarerBottomNavigation(
+    currentScreen: CarerScreen,
+    onScreenSelected: (CarerScreen) -> Unit
+) {
+    BottomNavigation {
+        val items = listOf(
+            BottomNavItem("Dashboard", Icons.Default.Home, CarerScreen.Dashboard),
+            BottomNavItem("Messages", Icons.Default.Email, CarerScreen.ChatList),
+            BottomNavItem("Profile", Icons.Default.Person, CarerScreen.Profile)
+        )
+        
+        items.forEach { item ->
+            BottomNavigationItem(
+                icon = {
+                    Icon(
+                        imageVector = item.icon,
+                        contentDescription = item.label
+                    )
+                },
+                label = { Text(item.label) },
+                selected = currentScreen == item.screen,
+                onClick = { onScreenSelected(item.screen) }
+            )
+        }
+    }
+}
+
+private data class BottomNavItem(
+    val label: String,
+    val icon: ImageVector,
+    val screen: CarerScreen
+)

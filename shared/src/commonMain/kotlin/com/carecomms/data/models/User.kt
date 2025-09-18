@@ -53,6 +53,7 @@ data class CareeInfo(
 data class CarerInfo(
     val id: String,
     val name: String,
+    val email: String,
     val location: String,
     val phoneNumber: String
 )

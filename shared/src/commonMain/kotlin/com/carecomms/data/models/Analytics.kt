@@ -67,7 +67,7 @@ data class DetailsTreeNode(
     val title: String,
     val type: NodeType,
     val children: List<DetailsTreeNode> = emptyList(),
-    val data: Any? = null,
+    val data: String? = null,
     val isExpanded: Boolean = false
 )
 

@@ -1,71 +1,46 @@
 package com.carecomms.android.ui.screens
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
-import androidx.compose.runtime.*
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.carecomms.android.ui.theme.CareCommsTheme
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
-    onSplashComplete: () -> Unit
+    onNavigateToLanding: () -> Unit
 ) {
     LaunchedEffect(Unit) {
-        delay(5000) // 5 second maximum duration as per requirements
-        onSplashComplete()
+        delay(2000) // Show splash for 2 seconds
+        onNavigateToLanding()
     }
-
-    Box(
+    
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colors.primary),
-        contentAlignment = Alignment.Center
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            // Placeholder for app logo - using a simple colored box for now
-            Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .background(
-                        Color.White,
-                        shape = MaterialTheme.shapes.large
-                    )
-            ) {
-                // TODO: Replace with actual app logo
-                // Image(
-                //     painter = painterResource(id = R.drawable.app_logo),
-                //     contentDescription = "CareComms Logo",
-                //     modifier = Modifier.fillMaxSize()
-                // )
-            }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // App name could be added here if needed
-            // Text(
-            //     text = "CareComms",
-            //     style = MaterialTheme.typography.h2,
-            //     color = Color.White
-            // )
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SplashScreenPreview() {
-    CareCommsTheme {
-        SplashScreen(onSplashComplete = {})
+        Text(
+            text = "CareComms",
+            fontSize = 48.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colors.primary
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "Connecting Care",
+            fontSize = 18.sp,
+            color = MaterialTheme.colors.onBackground
+        )
     }
 }
