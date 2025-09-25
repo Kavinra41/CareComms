@@ -1,5 +1,10 @@
 package com.carecomms.data.models
 
+sealed class AuthResult {
+    data class Success(val user: SimpleUser) : AuthResult()
+    data class Error(val message: String) : AuthResult()
+}
+
 sealed class AuthError : Exception() {
     object InvalidCredentials : AuthError()
     object UserNotFound : AuthError()

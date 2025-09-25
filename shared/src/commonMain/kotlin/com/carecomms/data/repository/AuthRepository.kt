@@ -1,17 +1,12 @@
 package com.carecomms.data.repository
 
-import com.carecomms.data.models.*
-import kotlinx.coroutines.flow.Flow
+import com.carecomms.data.models.AuthResult
+import com.carecomms.data.models.SimpleUser
 
 interface AuthRepository {
-    suspend fun signInWithEmail(email: String, password: String): Result<AuthResult>
-    suspend fun signUpCarer(carerData: CarerRegistrationData): Result<AuthResult>
-    suspend fun signUpCaree(careeData: CareeRegistrationData, invitationToken: String): Result<AuthResult>
-    suspend fun signOut(): Result<Unit>
-    suspend fun getCurrentUser(): User?
-    suspend fun validateInvitationToken(token: String): Result<CarerInfo>
-    suspend fun generateInvitationToken(carerId: String): Result<String>
-    suspend fun refreshToken(): Result<String>
-    fun isUserLoggedIn(): Flow<Boolean>
-    suspend fun deleteAccount(): Result<Unit>
+    suspend fun signInWithEmail(email: String, password: String): AuthResult
+    suspend fun signUpWithEmail(email: String, password: String, name: String, phoneNumber: String, city: String): AuthResult
+    suspend fun signOut()
+    suspend fun getCurrentUser(): SimpleUser?
+    suspend fun isUserSignedIn(): Boolean
 }

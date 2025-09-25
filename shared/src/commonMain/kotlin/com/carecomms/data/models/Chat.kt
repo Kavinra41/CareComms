@@ -4,8 +4,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Message(
-    val id: String,
+    val id: String = "",
+    val chatId: String = "",
     val senderId: String,
+    val senderName: String = "",
     val content: String,
     val timestamp: Long,
     val status: MessageStatus,
@@ -31,6 +33,10 @@ data class Chat(
     val id: String,
     val carerId: String,
     val careeId: String,
+    val participants: List<String> = listOf(carerId, careeId),
+    val participantNames: Map<String, String> = emptyMap(),
+    val lastMessage: String = "",
+    val lastMessageTimestamp: Long = System.currentTimeMillis(),
     val createdAt: Long,
     val lastActivity: Long
 )

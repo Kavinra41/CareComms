@@ -63,11 +63,13 @@ kotlin {
             // Koin Android
             implementation(libs.koin.android)
             
-            // Firebase - temporarily disabled
-            // implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-            // implementation("com.google.firebase:firebase-auth")
-            // implementation("com.google.firebase:firebase-database")
-            // implementation("com.google.firebase:firebase-messaging")
+            // Firebase - using BOM for version management
+            implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+            implementation("com.google.firebase:firebase-auth")
+            implementation("com.google.firebase:firebase-firestore")
+            
+            // Kotlin Coroutines Play Services (for Firebase async operations)
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
             
             // Security
             implementation("androidx.security:security-crypto:1.1.0-alpha06")

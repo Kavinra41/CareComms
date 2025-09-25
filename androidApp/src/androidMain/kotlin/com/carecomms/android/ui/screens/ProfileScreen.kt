@@ -1,5 +1,6 @@
 package com.carecomms.android.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
@@ -17,7 +18,9 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun ProfileScreen(
     carerId: String,
-    onLogout: () -> Unit
+    currentUser: com.carecomms.data.models.SimpleUser,
+    onLogout: () -> Unit,
+    onEditProfile: () -> Unit = {}
 ) {
     LazyColumn(
         modifier = Modifier
@@ -45,15 +48,23 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     Text(
-                        text = "Jane Doe", // Mock name
+                        text = currentUser.name,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
                     
                     Text(
-                        text = "Professional Carer",
+                        text = currentUser.email,
                         fontSize = 16.sp,
                         color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = "${currentUser.city} • ${currentUser.phoneNumber}",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
                     )
                 }
             }
@@ -82,7 +93,7 @@ fun ProfileScreen(
                 icon = Icons.Default.Person,
                 title = "Edit Profile",
                 subtitle = "Update your personal information",
-                onClick = { /* Navigate to edit profile */ }
+                onClick = onEditProfile
             )
         }
         
@@ -125,7 +136,8 @@ private fun ProfileMenuItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(16.dp)
+                .clickable { onClick() },
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(

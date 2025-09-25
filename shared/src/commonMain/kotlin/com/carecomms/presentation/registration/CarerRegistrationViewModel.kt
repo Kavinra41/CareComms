@@ -117,25 +117,23 @@ class CarerRegistrationViewModel(
                 
                 val result = registrationUseCase.execute(registrationData)
                 
-                result.fold(
-                    onSuccess = { authResult ->
+                when (result) {
+                    is com.carecomms.data.models.AuthResult.Success -> {
                         _state.value = currentState.copy(
                             isLoading = false,
                             isRegistrationSuccessful = true,
-                            authResult = authResult
+                            authResult = result
                         )
                         _effects.emit(CarerRegistrationEffect.NavigateToChatList)
-                    },
-                    onFailure = { error ->
+                    }
+                    is com.carecomms.data.models.AuthResult.Error -> {
                         _state.value = currentState.copy(
                             isLoading = false,
-                            registrationError = error.message ?: "Registration failed"
+                            registrationError = result.message
                         )
-                        _effects.emit(CarerRegistrationEffect.ShowError(
-                            error.message ?: "Registration failed"
-                        ))
+                        _effects.emit(CarerRegistrationEffect.ShowError(result.message))
                     }
-                )
+                }
             } catch (e: Exception) {
                 _state.value = currentState.copy(
                     isLoading = false,

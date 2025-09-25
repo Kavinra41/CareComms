@@ -7,6 +7,7 @@ sealed class AuthScreen {
     object Splash : AuthScreen()
     object Landing : AuthScreen()
     object Login : AuthScreen()
+    object Signup : AuthScreen()
     object CarerRegistration : AuthScreen()
     object CareeRegistration : AuthScreen()
     object Terms : AuthScreen()
@@ -33,6 +34,9 @@ fun AuthNavigation(
                 onNavigateToLogin = {
                     currentScreen = AuthScreen.Login
                 },
+                onNavigateToSignup = {
+                    currentScreen = AuthScreen.Signup
+                },
                 onNavigateToCarerRegistration = {
                     currentScreen = AuthScreen.CarerRegistration
                 },
@@ -44,6 +48,15 @@ fun AuthNavigation(
         
         AuthScreen.Login -> {
             LoginScreen(
+                onNavigateToHome = onNavigateToHome,
+                onNavigateBack = {
+                    currentScreen = AuthScreen.Landing
+                }
+            )
+        }
+        
+        AuthScreen.Signup -> {
+            SignupScreen(
                 onNavigateToHome = onNavigateToHome,
                 onNavigateBack = {
                     currentScreen = AuthScreen.Landing

@@ -2,7 +2,8 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.jetbrainsCompose)
-    // alias(libs.plugins.googleServices) // temporarily disabled
+    alias(libs.plugins.googleServices)
+    alias(libs.plugins.ksp)
 }
 
 kotlin {
@@ -28,16 +29,26 @@ kotlin {
             // UI Components
             implementation(libs.accompanist.swiperefresh)
             
-            // Firebase - temporarily disabled
-            // implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-            // implementation("com.google.firebase:firebase-auth")
-            // implementation("com.google.firebase:firebase-database")
-            // implementation("com.google.firebase:firebase-messaging")
+            // Serialization
+            implementation(libs.kotlinx.serialization.json)
         }
     }
 }
 
 dependencies {
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    
+    // Room
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+    
+    // Kotlin Coroutines Play Services (for Firebase async operations)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    
     // Test dependencies
     androidTestImplementation(libs.androidx.test.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -45,7 +56,7 @@ dependencies {
     androidTestImplementation(libs.kotlinx.coroutines.test)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
-    }
+}
 
 
 android {
@@ -76,7 +87,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
-    }
+    } 
     buildFeatures {
         compose = true
     }

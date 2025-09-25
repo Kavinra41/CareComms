@@ -8,19 +8,27 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.collectAsState
+import com.carecomms.android.ui.viewmodels.ChatListViewModel
+import com.carecomms.data.models.SimpleUser
 
 @Composable
 fun ChatListScreen(
     carerId: String,
+    viewModel: ChatListViewModel,
     onNavigateToChat: (String) -> Unit
 ) {
-    var chats by remember { mutableStateOf(generateMockChats()) }
+    val users by viewModel.users.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
     
     Column(
         modifier = Modifier.fillMaxSize()
@@ -34,30 +42,68 @@ fun ChatListScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Messages",
+                text = "Users",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colors.primary
             )
             
-            IconButton(onClick = { /* Add new chat */ }) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add new chat"
+            Row {
+                IconButton(onClick = { viewModel.refreshUsers() }) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Refresh users"
+                    )
+                }
+                
+                IconButton(onClick = { /* Add new chat */ }) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add new chat"
+                    )
+                }
+            }
+        }
+        
+        // Error message
+        error?.let { errorMessage ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                backgroundColor = MaterialTheme.colors.error.copy(alpha = 0.1f)
+            ) {
+                Text(
+                    text = errorMessage,
+                    color = MaterialTheme.colors.error,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+        
+        // Loading indicator
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.padding(16.dp)
                 )
             }
         }
         
-        // Chat list
+        // User list
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(horizontal = 16.dp)
         ) {
-            items(chats) { chat ->
-                ChatListItem(
-                    chat = chat,
-                    onClick = { onNavigateToChat(chat.id) }
+            items(users.filter { it.uid != carerId }) { user ->
+                UserListItem(
+                    user = user,
+                    onClick = { onNavigateToChat(user.uid) }
                 )
             }
         }
@@ -65,8 +111,8 @@ fun ChatListScreen(
 }
 
 @Composable
-private fun ChatListItem(
-    chat: MockChat,
+private fun UserListItem(
+    user: SimpleUser,
     onClick: () -> Unit
 ) {
     Card(
@@ -80,7 +126,7 @@ private fun ChatListItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.Email,
+                imageVector = Icons.Default.Person,
                 contentDescription = null,
                 tint = MaterialTheme.colors.primary,
                 modifier = Modifier.size(40.dp)
@@ -92,54 +138,34 @@ private fun ChatListItem(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = chat.name,
+                    text = user.name.ifEmpty { "Unknown User" },
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium
                 )
                 
                 Text(
-                    text = chat.lastMessage,
+                    text = user.email,
                     fontSize = 14.sp,
                     color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
                     maxLines = 1
                 )
-            }
-            
-            Column(
-                horizontalAlignment = Alignment.End
-            ) {
-                Text(
-                    text = chat.timestamp,
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f)
-                )
                 
-                if (chat.unreadCount > 0) {
-                    Badge(
-                        modifier = Modifier.padding(top = 4.dp)
-                    ) {
-                        Text(
-                            text = chat.unreadCount.toString(),
-                            fontSize = 10.sp
-                        )
-                    }
+                if (user.city.isNotEmpty()) {
+                    Text(
+                        text = user.city,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f)
+                    )
                 }
             }
+            
+            Icon(
+                imageVector = Icons.Default.Email,
+                contentDescription = "Start chat",
+                tint = MaterialTheme.colors.primary.copy(alpha = 0.6f),
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }
 
-data class MockChat(
-    val id: String,
-    val name: String,
-    val lastMessage: String,
-    val timestamp: String,
-    val unreadCount: Int
-)
-
-private fun generateMockChats() = listOf(
-    MockChat("1", "John Smith", "How are you feeling today?", "10:30 AM", 2),
-    MockChat("2", "Mary Johnson", "Thank you for the reminder", "Yesterday", 0),
-    MockChat("3", "Robert Brown", "I took my medication", "Tuesday", 1),
-    MockChat("4", "Sarah Wilson", "See you tomorrow", "Monday", 0)
-)

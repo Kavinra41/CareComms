@@ -10,24 +10,31 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.carecomms.android.ui.screens.*
+import com.carecomms.android.ui.viewmodels.ChatListViewModel
+import com.carecomms.android.ui.viewmodels.EditProfileViewModel
+import com.carecomms.android.ui.viewmodels.ChatViewModel
+import org.koin.androidx.compose.getViewModel
 
 sealed class CarerScreen {
     object Dashboard : CarerScreen()
     object ChatList : CarerScreen()
     object Profile : CarerScreen()
-    data class Chat(val chatId: String) : CarerScreen()
+    object EditProfile : CarerScreen()
+    data class Chat(val otherUserId: String) : CarerScreen()
 }
 
 @Composable
 fun CarerNavigation(
     carerId: String,
+    currentUser: com.carecomms.data.models.SimpleUser,
     onLogout: () -> Unit
 ) {
     var currentScreen by remember { mutableStateOf<CarerScreen>(CarerScreen.Dashboard) }
+    var updatedUser by remember { mutableStateOf(currentUser) }
     
     Scaffold(
         bottomBar = {
-            if (currentScreen !is CarerScreen.Chat) {
+            if (currentScreen !is CarerScreen.Chat && currentScreen !is CarerScreen.EditProfile) {
                 CarerBottomNavigation(
                     currentScreen = currentScreen,
                     onScreenSelected = { screen ->
@@ -45,10 +52,12 @@ fun CarerNavigation(
             }
             
             CarerScreen.ChatList -> {
+                val chatListViewModel: ChatListViewModel = getViewModel()
                 ChatListScreen(
                     carerId = carerId,
-                    onNavigateToChat = { chatId ->
-                        currentScreen = CarerScreen.Chat(chatId)
+                    viewModel = chatListViewModel,
+                    onNavigateToChat = { otherUserId ->
+                        currentScreen = CarerScreen.Chat(otherUserId)
                     }
                 )
             }
@@ -56,14 +65,34 @@ fun CarerNavigation(
             CarerScreen.Profile -> {
                 ProfileScreen(
                     carerId = carerId,
-                    onLogout = onLogout
+                    currentUser = updatedUser,
+                    onLogout = onLogout,
+                    onEditProfile = {
+                        currentScreen = CarerScreen.EditProfile
+                    }
+                )
+            }
+            
+            CarerScreen.EditProfile -> {
+                val editProfileViewModel: EditProfileViewModel = getViewModel()
+                EditProfileScreen(
+                    currentUser = updatedUser,
+                    viewModel = editProfileViewModel,
+                    onNavigateBack = {
+                        currentScreen = CarerScreen.Profile
+                    },
+                    onProfileUpdated = { user ->
+                        updatedUser = user
+                    }
                 )
             }
             
             is CarerScreen.Chat -> {
                 val chatScreen = currentScreen as CarerScreen.Chat
+                val chatViewModel: ChatViewModel = getViewModel()
                 ChatScreen(
-                    chatId = chatScreen.chatId,
+                    otherUserId = chatScreen.otherUserId,
+                    viewModel = chatViewModel,
                     onNavigateBack = {
                         currentScreen = CarerScreen.ChatList
                     }

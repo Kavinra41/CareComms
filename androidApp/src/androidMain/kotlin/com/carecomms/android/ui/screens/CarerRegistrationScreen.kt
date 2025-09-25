@@ -16,11 +16,16 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.carecomms.data.models.AuthResult
+import com.carecomms.data.repository.AuthRepository
+import kotlinx.coroutines.launch
+import org.koin.androidx.compose.get
 
 @Composable
 fun CarerRegistrationScreen(
     onNavigateToHome: (String) -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    authRepository: AuthRepository = get()
 ) {
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
@@ -32,6 +37,8 @@ fun CarerRegistrationScreen(
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    
+    val scope = rememberCoroutineScope()
     
     Column(
         modifier = Modifier
@@ -137,26 +144,37 @@ fun CarerRegistrationScreen(
         
         Button(
             onClick = {
-                isLoading = true
-                errorMessage = null
-                
                 // Basic validation
                 when {
                     firstName.isBlank() || lastName.isBlank() || email.isBlank() || password.isBlank() -> {
                         errorMessage = "Please fill in all fields"
-                        isLoading = false
+                        return@Button
                     }
                     password != confirmPassword -> {
                         errorMessage = "Passwords do not match"
-                        isLoading = false
+                        return@Button
                     }
                     password.length < 6 -> {
                         errorMessage = "Password must be at least 6 characters"
-                        isLoading = false
+                        return@Button
                     }
-                    else -> {
-                        // Mock registration success
-                        onNavigateToHome("carer")
+                }
+                
+                isLoading = true
+                errorMessage = null
+                
+                scope.launch {
+                    val fullName = "$firstName $lastName"
+                    val result = authRepository.signUpWithEmail(email, password, fullName, phoneNumber, "Unknown City")
+                    isLoading = false
+                    
+                    when (result) {
+                        is AuthResult.Success -> {
+                            onNavigateToHome("carer")
+                        }
+                        is AuthResult.Error -> {
+                            errorMessage = result.message
+                        }
                     }
                 }
             },

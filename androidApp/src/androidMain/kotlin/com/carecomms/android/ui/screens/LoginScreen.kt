@@ -14,17 +14,24 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.carecomms.data.models.AuthResult
+import com.carecomms.data.repository.AuthRepository
+import kotlinx.coroutines.launch
+import org.koin.androidx.compose.get
 
 @Composable
 fun LoginScreen(
     onNavigateToHome: (String) -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    authRepository: AuthRepository = get()
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    
+    val scope = rememberCoroutineScope()
     
     Column(
         modifier = Modifier
@@ -81,14 +88,26 @@ fun LoginScreen(
         
         Button(
             onClick = {
+                if (email.isBlank() || password.isBlank()) {
+                    errorMessage = "Please fill in all fields"
+                    return@Button
+                }
+                
                 isLoading = true
                 errorMessage = null
-                // Mock login - in real app this would call AuthRepository
-                if (email.isNotBlank() && password.isNotBlank()) {
-                    onNavigateToHome("carer") // Mock user type
-                } else {
-                    errorMessage = "Please fill in all fields"
+                
+                scope.launch {
+                    val result = authRepository.signInWithEmail(email, password)
                     isLoading = false
+                    
+                    when (result) {
+                        is AuthResult.Success -> {
+                            onNavigateToHome("user")
+                        }
+                        is AuthResult.Error -> {
+                            errorMessage = result.message
+                        }
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth(),

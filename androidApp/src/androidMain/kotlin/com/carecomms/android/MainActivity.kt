@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -15,7 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import com.carecomms.android.navigation.AuthNavigation
 import com.carecomms.android.navigation.CarerNavigation
+import com.carecomms.android.ui.screens.FirebaseLoginScreen
 import com.carecomms.android.ui.theme.CareCommsTheme
+import com.carecomms.data.repository.AuthRepository
+import kotlinx.coroutines.launch
+import org.koin.androidx.compose.get
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,60 +52,59 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun CareCommsApp(deepLinkUrl: String? = null) {
+fun CareCommsApp(
+    deepLinkUrl: String? = null,
+    authRepository: AuthRepository = get()
+) {
     var isAuthenticated by remember { mutableStateOf(false) }
-    var userType by remember { mutableStateOf("") }
-    var userId by remember { mutableStateOf("") }
-
-    if (isAuthenticated) {
-        when (userType) {
-            "carer" -> {
-                CarerApp(
-                    carerId = userId,
-                    onLogout = {
-                        isAuthenticated = false
-                        userType = ""
-                        userId = ""
-                    }
-                )
+    var currentUser by remember { mutableStateOf<com.carecomms.data.models.SimpleUser?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    
+    val scope = rememberCoroutineScope()
+    
+    // Check if user is already signed in
+    LaunchedEffect(Unit) {
+        scope.launch {
+            isAuthenticated = authRepository.isUserSignedIn()
+            if (isAuthenticated) {
+                currentUser = authRepository.getCurrentUser()
             }
-            "caree" -> {
-                // Placeholder for caree app content
-                // This will be implemented in later tasks
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Welcome to CareComms!\n\nCaree interface will be implemented in upcoming tasks.",
-                        style = MaterialTheme.typography.h6,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colors.primary
-                    )
-                }
-            }
-            else -> {
-                // Fallback for unknown user type
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Unknown user type: $userType",
-                        style = MaterialTheme.typography.h6,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colors.error
-                    )
-                }
-            }
+            isLoading = false
         }
+    }
+    
+    if (isLoading) {
+        // Show splash screen while checking authentication
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+    } else if (isAuthenticated && currentUser != null) {
+        CarerApp(
+            carerId = currentUser!!.uid,
+            currentUser = currentUser!!,
+            onLogout = {
+                scope.launch {
+                    authRepository.signOut()
+                    isAuthenticated = false
+                    currentUser = null
+                }
+            }
+        )
     } else {
+        // Show the original auth navigation flow (splash -> landing -> login/signup)
         AuthNavigation(
             deepLinkUrl = deepLinkUrl,
-            onNavigateToHome = { type ->
-                userType = type
-                userId = "mock-user-id" // In real app, this would come from auth
-                isAuthenticated = true
+            onNavigateToHome = { userType ->
+                // This callback will be triggered after successful authentication
+                scope.launch {
+                    isAuthenticated = authRepository.isUserSignedIn()
+                    if (isAuthenticated) {
+                        currentUser = authRepository.getCurrentUser()
+                    }
+                }
             }
         )
     }
@@ -109,10 +113,12 @@ fun CareCommsApp(deepLinkUrl: String? = null) {
 @Composable
 fun CarerApp(
     carerId: String,
+    currentUser: com.carecomms.data.models.SimpleUser,
     onLogout: () -> Unit
 ) {
     CarerNavigation(
         carerId = carerId,
+        currentUser = currentUser,
         onLogout = onLogout
     )
 }

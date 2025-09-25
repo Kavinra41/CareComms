@@ -76,8 +76,3 @@ data class CareeRegistrationData(
     val basicDetails: PersonalDetails
 )
 
-@Serializable
-data class AuthResult(
-    val user: User,
-    val token: String
-)

@@ -12,21 +12,23 @@ class CarerRegistrationUseCase(
     private val validator: CarerRegistrationValidator = CarerRegistrationValidator()
 ) {
     
-    suspend fun execute(registrationData: CarerRegistrationData): Result<AuthResult> {
+    suspend fun execute(registrationData: CarerRegistrationData): com.carecomms.data.models.AuthResult {
         // Validate the registration data
         val validationResult = validator.validate(registrationData)
         
         if (!validationResult.isValid) {
             val errorMessage = buildValidationErrorMessage(validationResult.errors)
-            return Result.failure(Exception(errorMessage))
+            return com.carecomms.data.models.AuthResult.Error(errorMessage)
         }
         
         // Attempt to register the carer
-        return try {
-            authRepository.signUpCarer(registrationData)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return authRepository.signUpWithEmail(
+            registrationData.email, 
+            registrationData.password,
+            "Carer", // Default name, can be updated later
+            registrationData.phoneNumber,
+            registrationData.location
+        )
     }
     
     private fun buildValidationErrorMessage(errors: List<ValidationError>): String {
