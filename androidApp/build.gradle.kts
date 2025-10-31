@@ -21,6 +21,7 @@ kotlin {
             implementation(libs.compose.ui)
             implementation(libs.compose.ui.tooling.preview)
             implementation(libs.compose.material)
+            implementation(libs.compose.material3)
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.navigation.compose)
             implementation(libs.koin.android)
@@ -48,6 +49,10 @@ dependencies {
     
     // Kotlin Coroutines Play Services (for Firebase async operations)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    
+    // Email functionality
+    implementation("com.sun.mail:android-mail:1.6.7")
+    implementation("com.sun.mail:android-activation:1.6.7")
     
     // Test dependencies
     androidTestImplementation(libs.androidx.test.junit)
@@ -77,6 +82,8 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/NOTICE.md"
+            excludes += "/META-INF/LICENSE.md"
         }
     }
     buildTypes {

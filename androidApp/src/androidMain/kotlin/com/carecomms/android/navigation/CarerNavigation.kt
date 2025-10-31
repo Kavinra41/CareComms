@@ -20,6 +20,7 @@ sealed class CarerScreen {
     object ChatList : CarerScreen()
     object Profile : CarerScreen()
     object EditProfile : CarerScreen()
+    object Invitation : CarerScreen()
     data class Chat(val otherUserId: String) : CarerScreen()
 }
 
@@ -47,7 +48,11 @@ fun CarerNavigation(
         when (currentScreen) {
             CarerScreen.Dashboard -> {
                 DashboardScreen(
-                    carerId = carerId
+                    carerId = carerId,
+                    currentUser = updatedUser,
+                    onNavigateToInvitation = {
+                        currentScreen = CarerScreen.Invitation
+                    }
                 )
             }
             
@@ -83,6 +88,14 @@ fun CarerNavigation(
                     },
                     onProfileUpdated = { user ->
                         updatedUser = user
+                    }
+                )
+            }
+            
+            CarerScreen.Invitation -> {
+                InvitationScreen(
+                    onNavigateBack = {
+                        currentScreen = CarerScreen.Dashboard
                     }
                 )
             }

@@ -16,11 +16,19 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.carecomms.data.models.AuthResult
+import com.carecomms.data.repository.AuthRepository
+import com.carecomms.data.repository.InvitationRepository
+import kotlinx.coroutines.launch
+import org.koin.androidx.compose.get
 
 @Composable
 fun CareeRegistrationScreen(
     onNavigateToHome: (String) -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    invitationCode: String? = null,
+    authRepository: AuthRepository = get(),
+    invitationRepository: InvitationRepository = get()
 ) {
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
@@ -28,12 +36,14 @@ fun CareeRegistrationScreen(
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
-    var emergencyContact by remember { mutableStateOf("") }
-    var invitationCode by remember { mutableStateOf("") }
+    var city by remember { mutableStateOf("") }
+    var enteredInvitationCode by remember { mutableStateOf(invitationCode ?: "") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    
+    val scope = rememberCoroutineScope()
     
     Column(
         modifier = Modifier
@@ -52,12 +62,34 @@ fun CareeRegistrationScreen(
         Spacer(modifier = Modifier.height(32.dp))
         
         OutlinedTextField(
-            value = invitationCode,
-            onValueChange = { invitationCode = it },
+            value = enteredInvitationCode,
+            onValueChange = { 
+                enteredInvitationCode = it.uppercase()
+                errorMessage = null
+            },
             label = { Text("Invitation Code (Optional)") },
+            placeholder = { Text("Enter 6-character code") },
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            singleLine = true,
+            isError = errorMessage != null,
+            enabled = invitationCode == null // Disable if code came from deep link
         )
+        
+        if (invitationCode != null) {
+            Text(
+                text = "✅ Connected via invitation link",
+                color = MaterialTheme.colors.primary,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        } else {
+            Text(
+                text = "Enter an invitation code to connect with a carer",
+                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                fontSize = 12.sp,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
         
         Spacer(modifier = Modifier.height(16.dp))
         
@@ -104,12 +136,15 @@ fun CareeRegistrationScreen(
         Spacer(modifier = Modifier.height(16.dp))
         
         OutlinedTextField(
-            value = emergencyContact,
-            onValueChange = { emergencyContact = it },
-            label = { Text("Emergency Contact") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            value = city,
+            onValueChange = { 
+                city = it
+                errorMessage = null
+            },
+            label = { Text("City") },
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            singleLine = true,
+            isError = errorMessage != null
         )
         
         Spacer(modifier = Modifier.height(16.dp))
@@ -160,27 +195,80 @@ fun CareeRegistrationScreen(
         
         Button(
             onClick = {
-                isLoading = true
-                errorMessage = null
-                
-                // Basic validation
                 when {
-                    firstName.isBlank() || lastName.isBlank() || email.isBlank() || password.isBlank() -> {
-                        errorMessage = "Please fill in all required fields"
-                        isLoading = false
+                    firstName.isBlank() || lastName.isBlank() || email.isBlank() || phoneNumber.isBlank() || city.isBlank() || password.isBlank() || confirmPassword.isBlank() -> {
+                        errorMessage = "Please fill in all fields"
+                        return@Button
                     }
                     password != confirmPassword -> {
                         errorMessage = "Passwords do not match"
-                        isLoading = false
+                        return@Button
                     }
                     password.length < 6 -> {
                         errorMessage = "Password must be at least 6 characters"
-                        isLoading = false
+                        return@Button
                     }
-                    else -> {
-                        // Mock registration success
-                        onNavigateToHome("caree")
+                }
+                
+                isLoading = true
+                scope.launch {
+                    val finalInvitationCode = enteredInvitationCode.takeIf { it.isNotBlank() }
+                    
+                    // First, create the user account
+                    val fullName = "$firstName $lastName"
+                    val result = authRepository.signUpWithEmail(email, password, fullName, phoneNumber, city)
+                    
+                    when (result) {
+                        is AuthResult.Success -> {
+                            println("CareeRegistrationScreen: Signup successful for user: ${result.user.uid}")
+                            
+                            // Now that user is authenticated, validate invitation code if provided
+                            if (finalInvitationCode != null) {
+                                println("CareeRegistrationScreen: Validating invitation code: $finalInvitationCode")
+                                val invitationResult = invitationRepository.validateInvitationCode(finalInvitationCode)
+                                println("CareeRegistrationScreen: Validation result - success: ${invitationResult.isSuccess}, failure: ${invitationResult.isFailure}")
+                                
+                                if (invitationResult.isSuccess) {
+                                    val carerInvitation = invitationResult.getOrNull()
+                                    println("CareeRegistrationScreen: Retrieved carer invitation: $carerInvitation")
+                                    
+                                    if (carerInvitation != null) {
+                                        // Create the relationship
+                                        val relationshipResult = invitationRepository.createCarerCareeRelationship(
+                                            carerId = carerInvitation.carerId,
+                                            careeId = result.user.uid,
+                                            invitationCode = finalInvitationCode
+                                        )
+                                        
+                                        if (relationshipResult.isFailure) {
+                                            println("CareeRegistrationScreen: Failed to create carer-caree relationship: ${relationshipResult.exceptionOrNull()?.message}")
+                                            // Don't fail signup, just show a warning
+                                            errorMessage = "Account created successfully, but failed to connect with carer. You can try connecting later."
+                                        } else {
+                                            println("CareeRegistrationScreen: Successfully created carer-caree relationship")
+                                        }
+                                    } else {
+                                        println("CareeRegistrationScreen: Invitation code not found")
+                                        errorMessage = "Account created successfully, but invitation code was not found. You can connect with a carer later."
+                                    }
+                                } else {
+                                    val error = invitationResult.exceptionOrNull()
+                                    println("CareeRegistrationScreen: Validation failed with error: ${error?.message}")
+                                    // Don't fail signup, just show a warning
+                                    errorMessage = "Account created successfully, but failed to validate invitation code. You can connect with a carer later."
+                                }
+                            }
+                            
+                            // Navigate to home regardless of invitation code validation
+                            onNavigateToHome("caree")
+                        }
+                        is AuthResult.Error -> {
+                            println("CareeRegistrationScreen: Signup error: ${result.message}")
+                            errorMessage = result.message
+                        }
                     }
+                    
+                    isLoading = false
                 }
             },
             modifier = Modifier.fillMaxWidth(),

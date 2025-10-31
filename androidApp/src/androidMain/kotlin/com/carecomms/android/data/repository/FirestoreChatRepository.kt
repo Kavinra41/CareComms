@@ -1,9 +1,11 @@
 package com.carecomms.android.data.repository
 
 import com.carecomms.data.models.Chat
+import com.carecomms.data.models.ChatPreview
 import com.carecomms.data.models.Message
 import com.carecomms.data.models.MessageStatus
 import com.carecomms.data.repository.ChatRepository
+import com.carecomms.data.repository.InvitationRepository
 import com.carecomms.data.repository.UserRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -14,7 +16,8 @@ import kotlinx.coroutines.tasks.await
 
 class FirestoreChatRepository(
     private val firestore: FirebaseFirestore,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val invitationRepository: InvitationRepository
 ) : ChatRepository {
 
     private val chatRoomsCollection = firestore.collection("chat_rooms")
@@ -210,6 +213,126 @@ class FirestoreChatRepository(
             println("FirestoreChatRepository: Error marking messages as read: ${e.message}")
             e.printStackTrace()
             Result.failure(e)
+        }
+    }
+
+    override suspend fun getChatPreviews(userId: String): Flow<List<ChatPreview>> = callbackFlow {
+        println("FirestoreChatRepository: Getting chat previews for user: $userId")
+        
+        var listener: com.google.firebase.firestore.ListenerRegistration? = null
+        
+        try {
+            // Get user's relationships (both as carer and caree)
+            val carerRelationships = invitationRepository.getCarerRelationships(userId).getOrNull() ?: emptyList()
+            val careeRelationships = invitationRepository.getCareeRelationships(userId).getOrNull() ?: emptyList()
+            
+            val connectedUserIds = mutableSetOf<String>()
+            
+            // Add carees (if user is a carer)
+            carerRelationships.forEach { relationship ->
+                connectedUserIds.add(relationship.careeId)
+            }
+            
+            // Add carers (if user is a caree)
+            careeRelationships.forEach { relationship ->
+                connectedUserIds.add(relationship.carerId)
+            }
+            
+            println("FirestoreChatRepository: Found ${connectedUserIds.size} connected users")
+            
+            if (connectedUserIds.isEmpty()) {
+                println("FirestoreChatRepository: No connected users found")
+                trySend(emptyList())
+            } else {
+                // Create chat previews for all connected users, whether chat rooms exist or not
+                
+                // Add previews from existing chat rooms
+                listener = chatRoomsCollection
+                    .whereArrayContains("participants", userId)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            println("FirestoreChatRepository: Error listening to chat previews: ${error.message}")
+                            return@addSnapshotListener
+                        }
+                        
+                        val existingChatPreviews = snapshot?.documents?.mapNotNull { document ->
+                            try {
+                                val data = document.data ?: return@mapNotNull null
+                                val participants = data["participants"] as? List<String> ?: return@mapNotNull null
+                                val participantNames = data["participantNames"] as? Map<String, String> ?: return@mapNotNull null
+                                
+                                // Find the other user in the chat
+                                val otherUserId = participants.firstOrNull { it != userId } ?: return@mapNotNull null
+                                
+                                // Only include chats with connected users
+                                if (!connectedUserIds.contains(otherUserId)) {
+                                    return@mapNotNull null
+                                }
+                                
+                                val otherUserName = participantNames[otherUserId] ?: "Unknown User"
+                                val lastMessage = data["lastMessage"] as? String ?: ""
+                                val lastMessageTimestamp = data["lastMessageTimestamp"] as? Long ?: 0L
+                                
+                                ChatPreview(
+                                    chatId = document.id,
+                                    otherUserId = otherUserId,
+                                    otherUserName = otherUserName,
+                                    lastMessage = lastMessage,
+                                    lastMessageTimestamp = lastMessageTimestamp,
+                                    unreadCount = 0,
+                                    isOnline = false
+                                )
+                            } catch (e: Exception) {
+                                println("FirestoreChatRepository: Error creating chat preview: ${e.message}")
+                                null
+                            }
+                        }?.toMutableList() ?: mutableListOf()
+                        
+                        // Add previews for connected users without existing chat rooms
+                        val existingChatUserIds = existingChatPreviews.map { it.otherUserId }.toSet()
+                        
+                        connectedUserIds.forEach { connectedUserId ->
+                            if (!existingChatUserIds.contains(connectedUserId)) {
+                                // Find the user name from relationships
+                                val userName = carerRelationships.find { it.careeId == connectedUserId }?.careeName
+                                    ?: careeRelationships.find { it.carerId == connectedUserId }?.carerName
+                                    ?: "Unknown User"
+                                
+                                // Create a chat ID for this potential chat
+                                val chatId = if (userId < connectedUserId) {
+                                    "${userId}_${connectedUserId}"
+                                } else {
+                                    "${connectedUserId}_${userId}"
+                                }
+                                
+                                existingChatPreviews.add(
+                                    ChatPreview(
+                                        chatId = chatId,
+                                        otherUserId = connectedUserId,
+                                        otherUserName = userName,
+                                        lastMessage = "Start a conversation",
+                                        lastMessageTimestamp = 0L,
+                                        unreadCount = 0,
+                                        isOnline = false
+                                    )
+                                )
+                            }
+                        }
+                        
+                        val sortedPreviews = existingChatPreviews.sortedByDescending { it.lastMessageTimestamp }
+                        println("FirestoreChatRepository: Sending ${sortedPreviews.size} chat previews (${existingChatUserIds.size} existing, ${connectedUserIds.size - existingChatUserIds.size} new)")
+                        trySend(sortedPreviews)
+                    }
+            }
+            
+        } catch (e: Exception) {
+            println("FirestoreChatRepository: Error setting up chat previews: ${e.message}")
+            trySend(emptyList())
+        }
+        
+        awaitClose { 
+            println("FirestoreChatRepository: Removing chat previews listener")
+            listener?.remove()
         }
     }
 }

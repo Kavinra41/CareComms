@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.carecomms.data.models.AuthResult
 import com.carecomms.data.repository.AuthRepository
+import com.carecomms.data.repository.InvitationRepository
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 
@@ -20,7 +21,9 @@ import org.koin.androidx.compose.get
 fun SignupScreen(
     onNavigateToHome: (String) -> Unit,
     onNavigateBack: () -> Unit,
-    authRepository: AuthRepository = get()
+    invitationCode: String? = null,
+    authRepository: AuthRepository = get(),
+    invitationRepository: InvitationRepository = get()
 ) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -28,6 +31,7 @@ fun SignupScreen(
     var city by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var enteredInvitationCode by remember { mutableStateOf(invitationCode ?: "") }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     
@@ -133,10 +137,43 @@ fun SignupScreen(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 24.dp),
+                .padding(bottom = 16.dp),
             singleLine = true,
             isError = errorMessage != null
         )
+        
+        // Invitation Code Field
+        OutlinedTextField(
+            value = enteredInvitationCode,
+            onValueChange = { 
+                enteredInvitationCode = it.uppercase()
+                errorMessage = null
+            },
+            label = { Text("Invitation Code (Optional)") },
+            placeholder = { Text("Enter 6-character code") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            singleLine = true,
+            isError = errorMessage != null,
+            enabled = invitationCode == null // Disable if code came from deep link
+        )
+        
+        if (invitationCode != null) {
+            Text(
+                text = "✅ Connected via invitation link",
+                color = MaterialTheme.colors.primary,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+        } else {
+            Text(
+                text = "Enter an invitation code to connect with a carer",
+                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                fontSize = 12.sp,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+        }
         
         if (errorMessage != null) {
             Text(
@@ -166,19 +203,64 @@ fun SignupScreen(
                 
                 isLoading = true
                 scope.launch {
+                    val finalInvitationCode = enteredInvitationCode.takeIf { it.isNotBlank() }
+                    
+                    // First, create the user account
                     val result = authRepository.signUpWithEmail(email, password, name, phoneNumber, city)
-                    isLoading = false
                     
                     when (result) {
                         is AuthResult.Success -> {
-                            println("Signup successful for user: ${result.user.uid}")
-                            onNavigateToHome("carer") // Navigate to main app
+                            println("SignupScreen: Signup successful for user: ${result.user.uid}")
+                            var userType = "carer" // Default to carer
+                            
+                            // Now that user is authenticated, validate invitation code if provided
+                            if (finalInvitationCode != null) {
+                                println("SignupScreen: Validating invitation code: $finalInvitationCode")
+                                val invitationResult = invitationRepository.validateInvitationCode(finalInvitationCode)
+                                println("SignupScreen: Validation result - success: ${invitationResult.isSuccess}, failure: ${invitationResult.isFailure}")
+                                
+                                if (invitationResult.isSuccess) {
+                                    val carerInvitation = invitationResult.getOrNull()
+                                    println("SignupScreen: Retrieved carer invitation: $carerInvitation")
+                                    
+                                    if (carerInvitation != null) {
+                                        // Create the relationship
+                                        val relationshipResult = invitationRepository.createCarerCareeRelationship(
+                                            carerId = carerInvitation.carerId,
+                                            careeId = result.user.uid,
+                                            invitationCode = finalInvitationCode
+                                        )
+                                        
+                                        if (relationshipResult.isSuccess) {
+                                            println("SignupScreen: Successfully created carer-caree relationship")
+                                            userType = "caree" // User becomes a caree
+                                        } else {
+                                            println("SignupScreen: Failed to create carer-caree relationship: ${relationshipResult.exceptionOrNull()?.message}")
+                                            // Don't fail signup, just show a warning
+                                            errorMessage = "Account created successfully, but failed to connect with carer. You can try connecting later."
+                                        }
+                                    } else {
+                                        println("SignupScreen: Invitation code not found")
+                                        errorMessage = "Account created successfully, but invitation code was not found. You can connect with a carer later."
+                                    }
+                                } else {
+                                    val error = invitationResult.exceptionOrNull()
+                                    println("SignupScreen: Validation failed with error: ${error?.message}")
+                                    // Don't fail signup, just show a warning
+                                    errorMessage = "Account created successfully, but failed to validate invitation code. You can connect with a carer later."
+                                }
+                            }
+                            
+                            // Navigate to home regardless of invitation code validation
+                            onNavigateToHome(userType)
                         }
                         is AuthResult.Error -> {
-                            println("Signup error: ${result.message}")
+                            println("SignupScreen: Signup error: ${result.message}")
                             errorMessage = result.message
                         }
                     }
+                    
+                    isLoading = false
                 }
             },
             modifier = Modifier
@@ -204,6 +286,16 @@ fun SignupScreen(
             modifier = Modifier.padding(top = 16.dp)
         ) {
             Text("Back")
+        }
+        
+        // Debug button to test invitation code validation
+        TextButton(
+            onClick = {
+                errorMessage = "ℹ️ Invitation codes are validated after account creation. Create an account to test the invitation flow."
+            },
+            modifier = Modifier.padding(top = 8.dp)
+        ) {
+            Text("About Invitation Validation", color = MaterialTheme.colors.secondary)
         }
         
         // Debug button to test Firestore directly

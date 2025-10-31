@@ -42,16 +42,6 @@ data class Chat(
 )
 
 @Serializable
-data class ChatPreview(
-    val chatId: String,
-    val careeName: String,
-    val lastMessage: String,
-    val lastMessageTime: Long,
-    val unreadCount: Int,
-    val isOnline: Boolean
-)
-
-@Serializable
 data class TypingStatus(
     val userId: String,
     val isTyping: Boolean,

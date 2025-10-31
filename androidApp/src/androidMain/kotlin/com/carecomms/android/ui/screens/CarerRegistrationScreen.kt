@@ -33,6 +33,7 @@ fun CarerRegistrationScreen(
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
+    var city by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
@@ -99,6 +100,16 @@ fun CarerRegistrationScreen(
         Spacer(modifier = Modifier.height(16.dp))
         
         OutlinedTextField(
+            value = city,
+            onValueChange = { city = it },
+            label = { Text("City") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        OutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
@@ -146,7 +157,7 @@ fun CarerRegistrationScreen(
             onClick = {
                 // Basic validation
                 when {
-                    firstName.isBlank() || lastName.isBlank() || email.isBlank() || password.isBlank() -> {
+                    firstName.isBlank() || lastName.isBlank() || email.isBlank() || phoneNumber.isBlank() || city.isBlank() || password.isBlank() -> {
                         errorMessage = "Please fill in all fields"
                         return@Button
                     }
@@ -165,14 +176,16 @@ fun CarerRegistrationScreen(
                 
                 scope.launch {
                     val fullName = "$firstName $lastName"
-                    val result = authRepository.signUpWithEmail(email, password, fullName, phoneNumber, "Unknown City")
+                    val result = authRepository.signUpWithEmail(email, password, fullName, phoneNumber, city)
                     isLoading = false
                     
                     when (result) {
                         is AuthResult.Success -> {
+                            println("CarerRegistrationScreen: Signup successful for user: ${result.user.uid}")
                             onNavigateToHome("carer")
                         }
                         is AuthResult.Error -> {
+                            println("CarerRegistrationScreen: Signup error: ${result.message}")
                             errorMessage = result.message
                         }
                     }

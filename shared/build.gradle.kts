@@ -53,7 +53,7 @@ kotlin {
         
         commonTest.dependencies {
             implementation(libs.kotlin.test)
-            implementation("app.cash.sqldelight:sqlite-driver:2.0.1")
+            implementation(libs.sqldelight.sqlite.driver)
         }
         
         androidMain.dependencies {

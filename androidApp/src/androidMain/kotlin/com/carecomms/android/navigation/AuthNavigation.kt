@@ -7,7 +7,6 @@ sealed class AuthScreen {
     object Splash : AuthScreen()
     object Landing : AuthScreen()
     object Login : AuthScreen()
-    object Signup : AuthScreen()
     object CarerRegistration : AuthScreen()
     object CareeRegistration : AuthScreen()
     object Terms : AuthScreen()
@@ -15,7 +14,7 @@ sealed class AuthScreen {
 
 @Composable
 fun AuthNavigation(
-    deepLinkUrl: String? = null,
+    invitationCode: String? = null,
     onNavigateToHome: (String) -> Unit
 ) {
     var currentScreen by remember { mutableStateOf<AuthScreen>(AuthScreen.Splash) }
@@ -33,9 +32,6 @@ fun AuthNavigation(
             LandingScreen(
                 onNavigateToLogin = {
                     currentScreen = AuthScreen.Login
-                },
-                onNavigateToSignup = {
-                    currentScreen = AuthScreen.Signup
                 },
                 onNavigateToCarerRegistration = {
                     currentScreen = AuthScreen.CarerRegistration
@@ -55,14 +51,7 @@ fun AuthNavigation(
             )
         }
         
-        AuthScreen.Signup -> {
-            SignupScreen(
-                onNavigateToHome = onNavigateToHome,
-                onNavigateBack = {
-                    currentScreen = AuthScreen.Landing
-                }
-            )
-        }
+
         
         AuthScreen.CarerRegistration -> {
             CarerRegistrationScreen(
@@ -78,7 +67,8 @@ fun AuthNavigation(
                 onNavigateToHome = onNavigateToHome,
                 onNavigateBack = {
                     currentScreen = AuthScreen.Landing
-                }
+                },
+                invitationCode = invitationCode
             )
         }
         

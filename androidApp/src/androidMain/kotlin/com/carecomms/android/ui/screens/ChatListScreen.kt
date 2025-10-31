@@ -18,7 +18,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.collectAsState
 import com.carecomms.android.ui.viewmodels.ChatListViewModel
-import com.carecomms.data.models.SimpleUser
+import com.carecomms.data.models.ChatPreview
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
 fun ChatListScreen(
@@ -26,7 +28,7 @@ fun ChatListScreen(
     viewModel: ChatListViewModel,
     onNavigateToChat: (String) -> Unit
 ) {
-    val users by viewModel.users.collectAsState()
+    val chatPreviews by viewModel.chatPreviews.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
     
@@ -42,26 +44,17 @@ fun ChatListScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Users",
+                text = "Messages",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colors.primary
             )
             
-            Row {
-                IconButton(onClick = { viewModel.refreshUsers() }) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Refresh users"
-                    )
-                }
-                
-                IconButton(onClick = { /* Add new chat */ }) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add new chat"
-                    )
-                }
+            IconButton(onClick = { viewModel.refreshChats() }) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Refresh chats"
+                )
             }
         }
         
@@ -73,11 +66,20 @@ fun ChatListScreen(
                     .padding(horizontal = 16.dp),
                 backgroundColor = MaterialTheme.colors.error.copy(alpha = 0.1f)
             ) {
-                Text(
-                    text = errorMessage,
-                    color = MaterialTheme.colors.error,
+                Column(
                     modifier = Modifier.padding(16.dp)
-                )
+                ) {
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colors.error
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Try refreshing or check your internet connection",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colors.error.copy(alpha = 0.7f)
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -94,25 +96,63 @@ fun ChatListScreen(
             }
         }
         
-        // User list
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp)
-        ) {
-            items(users.filter { it.uid != carerId }) { user ->
-                UserListItem(
-                    user = user,
-                    onClick = { onNavigateToChat(user.uid) }
-                )
+        // Chat list
+        if (chatPreviews.isEmpty() && !isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Email,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colors.onSurface.copy(alpha = 0.4f)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "No conversations yet",
+                        fontSize = 18.sp,
+                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Connect with someone using invitation codes to start chatting",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.4f),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "• Carers: Go to Dashboard → Invite to generate codes\n• Care Recipients: Use invitation codes during registration",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.3f),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp)
+            ) {
+                items(chatPreviews) { chatPreview ->
+                    ChatPreviewItem(
+                        chatPreview = chatPreview,
+                        onClick = { onNavigateToChat(chatPreview.otherUserId) }
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun UserListItem(
-    user: SimpleUser,
+private fun ChatPreviewItem(
+    chatPreview: ChatPreview,
     onClick: () -> Unit
 ) {
     Card(
@@ -138,34 +178,71 @@ private fun UserListItem(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = user.name.ifEmpty { "Unknown User" },
+                    text = chatPreview.otherUserName,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium
                 )
                 
                 Text(
-                    text = user.email,
+                    text = if (chatPreview.lastMessage.isNotEmpty()) {
+                        chatPreview.lastMessage
+                    } else {
+                        "No messages yet"
+                    },
                     fontSize = 14.sp,
                     color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
                     maxLines = 1
                 )
-                
-                if (user.city.isNotEmpty()) {
-                    Text(
-                        text = user.city,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f)
-                    )
-                }
             }
             
-            Icon(
-                imageVector = Icons.Default.Email,
-                contentDescription = "Start chat",
-                tint = MaterialTheme.colors.primary.copy(alpha = 0.6f),
-                modifier = Modifier.size(24.dp)
-            )
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = formatTimestamp(chatPreview.lastMessageTimestamp),
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f)
+                )
+                
+                if (chatPreview.unreadCount > 0) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Card(
+                        backgroundColor = MaterialTheme.colors.primary,
+                        modifier = Modifier.size(20.dp)
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Text(
+                                text = chatPreview.unreadCount.toString(),
+                                color = MaterialTheme.colors.onPrimary,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
+
+private fun formatTimestamp(timestamp: Long): String {
+    if (timestamp == 0L) return ""
+    
+    val now = System.currentTimeMillis()
+    val diff = now - timestamp
+    
+    return when {
+        diff < 60_000 -> "Now" // Less than 1 minute
+        diff < 3600_000 -> "${diff / 60_000}m" // Less than 1 hour
+        diff < 86400_000 -> "${diff / 3600_000}h" // Less than 1 day
+        diff < 604800_000 -> "${diff / 86400_000}d" // Less than 1 week
+        else -> {
+            val dateFormat = SimpleDateFormat("MMM dd", Locale.getDefault())
+            dateFormat.format(Date(timestamp))
+        }
+    }
+}

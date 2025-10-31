@@ -18,6 +18,7 @@ import com.carecomms.android.navigation.AuthNavigation
 import com.carecomms.android.navigation.CarerNavigation
 import com.carecomms.android.ui.screens.FirebaseLoginScreen
 import com.carecomms.android.ui.theme.CareCommsTheme
+import com.carecomms.android.utils.DeepLinkHandler
 import com.carecomms.data.repository.AuthRepository
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
@@ -27,7 +28,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         
         // Handle deep link from intent
-        val deepLinkUrl = intent?.data?.toString()
+        println("MainActivity: onCreate - Intent: ${intent}")
+        println("MainActivity: onCreate - Intent action: ${intent?.action}")
+        println("MainActivity: onCreate - Intent data: ${intent?.data}")
+        val invitationCode = DeepLinkHandler.extractInvitationCode(intent)
+        println("MainActivity: onCreate - Extracted invitation code: $invitationCode")
         
         setContent {
             CareCommsTheme {
@@ -35,7 +40,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    CareCommsApp(deepLinkUrl = deepLinkUrl)
+                    CareCommsApp(invitationCode = invitationCode)
                 }
             }
         }
@@ -43,17 +48,24 @@ class MainActivity : ComponentActivity() {
     
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
+        setIntent(intent)
         // Handle deep links when app is already running
-        intent?.data?.toString()?.let { url ->
-            // This would need to be handled by updating the navigation state
-            // For now, we'll handle it in the initial onCreate
+        println("MainActivity: onNewIntent - Intent: ${intent}")
+        println("MainActivity: onNewIntent - Intent action: ${intent?.action}")
+        println("MainActivity: onNewIntent - Intent data: ${intent?.data}")
+        val invitationCode = DeepLinkHandler.extractInvitationCode(intent)
+        println("MainActivity: onNewIntent - Extracted invitation code: $invitationCode")
+        if (invitationCode != null) {
+            // For now, restart the activity to handle the deep link
+            // In a more sophisticated implementation, you'd update the navigation state
+            recreate()
         }
     }
 }
 
 @Composable
 fun CareCommsApp(
-    deepLinkUrl: String? = null,
+    invitationCode: String? = null,
     authRepository: AuthRepository = get()
 ) {
     var isAuthenticated by remember { mutableStateOf(false) }
@@ -96,7 +108,7 @@ fun CareCommsApp(
     } else {
         // Show the original auth navigation flow (splash -> landing -> login/signup)
         AuthNavigation(
-            deepLinkUrl = deepLinkUrl,
+            invitationCode = invitationCode,
             onNavigateToHome = { userType ->
                 // This callback will be triggered after successful authentication
                 scope.launch {

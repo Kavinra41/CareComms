@@ -5,6 +5,7 @@ import com.carecomms.android.data.local.dao.MessageDao
 import com.carecomms.android.data.local.entities.ChatEntity
 import com.carecomms.android.data.local.entities.MessageEntity
 import com.carecomms.data.models.Chat
+import com.carecomms.data.models.ChatPreview
 import com.carecomms.data.models.Message
 import com.carecomms.data.models.MessageStatus
 import com.carecomms.data.models.MessageType
@@ -117,6 +118,12 @@ class LocalChatRepository(
             e.printStackTrace()
             Result.failure(e)
         }
+    }
+
+    override suspend fun getChatPreviews(userId: String): Flow<List<ChatPreview>> {
+        // For local implementation, return empty list for now
+        // In a full implementation, this would query local database
+        return kotlinx.coroutines.flow.flowOf(emptyList())
     }
 
     // Extension functions for entity conversion

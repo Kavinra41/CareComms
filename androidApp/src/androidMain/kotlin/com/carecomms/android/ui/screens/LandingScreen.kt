@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun LandingScreen(
     onNavigateToLogin: () -> Unit,
-    onNavigateToSignup: () -> Unit,
     onNavigateToCarerRegistration: () -> Unit,
     onNavigateToCareeRegistration: () -> Unit
 ) {
@@ -55,27 +54,19 @@ fun LandingScreen(
             Text("Sign In")
         }
         
-        Button(
-            onClick = onNavigateToSignup,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-        ) {
-            Text("Sign Up")
-        }
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Text(
+            text = "New to CareComms? Choose your role:",
+            fontSize = 16.sp,
+            color = MaterialTheme.colors.onBackground.copy(alpha = 0.8f),
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Medium
+        )
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        Text(
-            text = "Or register with specific role:",
-            fontSize = 14.sp,
-            color = MaterialTheme.colors.onBackground.copy(alpha = 0.7f),
-            textAlign = TextAlign.Center
-        )
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        OutlinedButton(
+        Button(
             onClick = onNavigateToCarerRegistration,
             modifier = Modifier
                 .fillMaxWidth()
@@ -84,7 +75,7 @@ fun LandingScreen(
             Text("Register as Carer")
         }
         
-        OutlinedButton(
+        Button(
             onClick = onNavigateToCareeRegistration,
             modifier = Modifier
                 .fillMaxWidth()

@@ -48,9 +48,9 @@ class SessionManager(
     
     suspend fun validateSession(): Result<SessionValidation> {
         return try {
-            val userId = secureStorage.retrieve(SecureStorageKeys.USER_ID).getOrNull()
-            val authToken = secureStorage.retrieve(SecureStorageKeys.AUTH_TOKEN).getOrNull()
-            val expiryTimeString = secureStorage.retrieve(SecureStorageKeys.SESSION_EXPIRY).getOrNull()
+            val userId = secureStorage.retrieve(SecureStorageKeys.USER_ID)
+            val authToken = secureStorage.retrieve(SecureStorageKeys.AUTH_TOKEN)
+            val expiryTimeString = secureStorage.retrieve(SecureStorageKeys.SESSION_EXPIRY)
             
             if (userId == null || authToken == null || expiryTimeString == null) {
                 _sessionState.value = SessionState.NotAuthenticated
@@ -89,7 +89,7 @@ class SessionManager(
     
     suspend fun refreshSession(newAuthToken: String, newRefreshToken: String): Result<Unit> {
         return try {
-            val userId = secureStorage.retrieve(SecureStorageKeys.USER_ID).getOrNull()
+            val userId = secureStorage.retrieve(SecureStorageKeys.USER_ID)
                 ?: return Result.failure(SecurityException("No active session to refresh"))
             
             val newExpiryTime = Clock.System.now().plus(sessionTimeoutMinutes.minutes)
@@ -121,15 +121,15 @@ class SessionManager(
     }
     
     suspend fun getCurrentUserId(): String? {
-        return secureStorage.retrieve(SecureStorageKeys.USER_ID).getOrNull()
+        return secureStorage.retrieve(SecureStorageKeys.USER_ID)
     }
     
     suspend fun getCurrentAuthToken(): String? {
-        return secureStorage.retrieve(SecureStorageKeys.AUTH_TOKEN).getOrNull()
+        return secureStorage.retrieve(SecureStorageKeys.AUTH_TOKEN)
     }
     
     suspend fun getCurrentRefreshToken(): String? {
-        return secureStorage.retrieve(SecureStorageKeys.REFRESH_TOKEN).getOrNull()
+        return secureStorage.retrieve(SecureStorageKeys.REFRESH_TOKEN)
     }
 }
 

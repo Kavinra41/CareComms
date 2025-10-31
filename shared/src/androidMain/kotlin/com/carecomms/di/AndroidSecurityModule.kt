@@ -9,5 +9,5 @@ import org.koin.dsl.module
 
 val androidSecurityModule = module {
     single<EncryptionManager> { AndroidEncryptionManager() }
-    single<SecureStorage> { AndroidSecureStorage(get<Context>()) }
+    single<SecureStorage> { AndroidSecureStorage(get()) }
 }

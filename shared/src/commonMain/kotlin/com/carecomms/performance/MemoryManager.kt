@@ -1,55 +1,30 @@
 package com.carecomms.performance
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-
-/**
- * Manages memory usage and provides memory optimization utilities
- */
 class MemoryManager {
-    private val _memoryPressure = MutableStateFlow(MemoryPressure.NORMAL)
-    val memoryPressure: StateFlow<MemoryPressure> = _memoryPressure
     
-    private val memoryListeners = mutableListOf<MemoryListener>()
-    
-    fun addMemoryListener(listener: MemoryListener) {
-        memoryListeners.add(listener)
+    fun getMemoryUsage(): Long {
+        return Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
     }
     
-    fun removeMemoryListener(listener: MemoryListener) {
-        memoryListeners.remove(listener)
+    fun getMaxMemory(): Long {
+        return Runtime.getRuntime().maxMemory()
     }
     
-    fun onMemoryPressure(pressure: MemoryPressure) {
-        _memoryPressure.value = pressure
-        memoryListeners.forEach { listener ->
-            when (pressure) {
-                MemoryPressure.LOW -> listener.onLowMemory()
-                MemoryPressure.CRITICAL -> listener.onCriticalMemory()
-                MemoryPressure.NORMAL -> listener.onMemoryRecovered()
-            }
-        }
+    fun getAvailableMemory(): Long {
+        return Runtime.getRuntime().freeMemory()
     }
     
-    fun clearCaches() {
-        memoryListeners.forEach { it.onClearCaches() }
+    fun getMemoryUsagePercentage(): Float {
+        val used = getMemoryUsage()
+        val max = getMaxMemory()
+        return if (max > 0) (used.toFloat() / max.toFloat()) * 100f else 0f
     }
     
-    fun trimMemory() {
-        memoryListeners.forEach { it.onTrimMemory() }
+    fun requestGarbageCollection() {
+        System.gc()
     }
-}
-
-enum class MemoryPressure {
-    NORMAL,
-    LOW,
-    CRITICAL
-}
-
-interface MemoryListener {
-    fun onLowMemory()
-    fun onCriticalMemory()
-    fun onMemoryRecovered()
-    fun onClearCaches()
-    fun onTrimMemory()
+    
+    fun isMemoryLow(): Boolean {
+        return getMemoryUsagePercentage() > 80f
+    }
 }
