@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "285019210383",
+    "project_id": "carecommsdemo",
+    "storage_bucket": "carecommsdemo.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:285019210383:android:1f9cdff0d3240fca5ae6fa",
+        "android_client_info": {
+          "package_name": "com.carecomms.android"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDB52XJbGZTFsW1K2ZagLTbtZbyrNn4i1c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
